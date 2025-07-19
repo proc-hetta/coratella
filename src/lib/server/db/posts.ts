@@ -100,7 +100,7 @@ export async function updateOrCreatePost(fullpost: FullPost) {
         id: fullpost.id === -1 ? undefined : fullpost.id,
         title: fullpost.title,
         content: fullpost.content,
-        password: fullpost.password,
+        password: fullpost.password ? fullpost.password : undefined,
         draft: fullpost.draft,
         toc: fullpost.toc,
         math: fullpost.math,
