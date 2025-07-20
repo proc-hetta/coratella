@@ -1,4 +1,4 @@
-import { getPost } from '$lib/server/db/posts';
+import { getPost, incrementVisits } from '$lib/server/db/posts';
 import type { PageServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
 
@@ -12,6 +12,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
   if (post.password !== null && post.password !== password) {
     return redirect(307, `/password?post=${id}`);
   }
+  await incrementVisits(id);
   return {
     post: post,
   };

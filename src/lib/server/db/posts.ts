@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { posts, postsToAuthors, postsToCategories, postsToTags } from '$lib/server/db/schema';
 import type { Author, Category, Post, Tag } from '$lib/server/db/schema.js';
@@ -132,4 +132,13 @@ export async function deletePost(id: number) {
     await tx.delete(postsToCategories).where(eq(postsToCategories.postId, id));
     await tx.delete(posts).where(eq(posts.id, id));
   });
+}
+
+export async function incrementVisits(id: number) {
+  await db
+    .update(posts)
+    .set({
+      visits: sql`${posts.visits} + 1`,
+    })
+    .where(eq(posts.id, id));
 }
