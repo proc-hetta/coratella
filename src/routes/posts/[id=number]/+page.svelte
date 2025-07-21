@@ -15,7 +15,12 @@
     </h2>
     <div class="mt-5 flex w-full gap-2">
       {#each post.categories as category (category.id)}
-        <div class="badge preset-filled-primary-500 h-fit">{category.name}</div>
+        <div
+          class="badge preset-filled-primary-500 h-fit"
+          style="background-color: {category.color};"
+        >
+          {category.name}
+        </div>
       {/each}
     </div>
     <div class="mt-5 flex w-full flex-wrap gap-2">

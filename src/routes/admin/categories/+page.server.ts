@@ -14,12 +14,13 @@ export const actions = {
     const data = await request.formData();
 
     const name = data.get('name');
+    const color = data.get('color') ?? undefined;
 
     if (!name) {
       return fail(400, { message: m.missingRequiredParameters({ parameters: m.name() }) });
     }
     try {
-      await createCategory(name.toString());
+      await createCategory(name.toString(), color ? color.toString() : undefined);
     } catch (e: any) {
       return fail(500, { message: e.toString() });
     }
@@ -29,6 +30,7 @@ export const actions = {
 
     const id = data.get('id');
     const name = data.get('name');
+    const color = data.get('color') ?? undefined;
     if (!id) {
       return fail(400, { message: m.missingId() });
     }
@@ -36,7 +38,11 @@ export const actions = {
       return fail(400, { message: m.missingRequiredParameters({ parameters: m.name() }) });
     }
     try {
-      await updateCategory(parseInt(id.toString()), name.toString());
+      await updateCategory(
+        parseInt(id.toString()),
+        name.toString(),
+        color ? color.toString() : undefined,
+      );
     } catch (e: any) {
       return fail(500, { message: e.toString() });
     }

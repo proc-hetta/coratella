@@ -1,13 +1,14 @@
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { categories } from '$lib/server/db/schema';
+import type { HSL, RGB } from './color';
 
-export async function updateCategory(id: number, name: string) {
-  await db.update(categories).set({ name }).where(eq(categories.id, id));
+export async function updateCategory(id: number, name: string, color: string | undefined) {
+  await db.update(categories).set({ name, color }).where(eq(categories.id, id));
 }
 
-export async function createCategory(name: string) {
-  return await db.insert(categories).values({ name }).returning();
+export async function createCategory(name: string, color: string | undefined) {
+  return await db.insert(categories).values({ name, color }).returning();
 }
 
 export async function getCategories() {
@@ -15,6 +16,7 @@ export async function getCategories() {
     .select({
       id: categories.id,
       name: categories.name,
+      color: categories.color,
     })
     .from(categories)
     .orderBy(categories.id);
