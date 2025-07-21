@@ -52,11 +52,11 @@
   function openCreateCategoryModal() {
     formName = '';
     formId = null;
-    formColor = null;
+    formColor = rgbToHsl(hexToRgb('#000000'));
     createModalOpen = true;
   }
 
-  function openEditCategoryModal(id: number, name: string, color: HSL | null) {
+  function openEditCategoryModal(id: number, name: string, color: HSL) {
     console.log(color);
     formName = name;
     formId = id;
