@@ -26,6 +26,7 @@ export const tags = pgTable('tags', {
 export const categories = pgTable('categories', {
   id: serial('id').primaryKey(),
   name: text('name').unique().notNull(),
+  color: text('color'),
 });
 
 export const posts = pgTable('posts', {

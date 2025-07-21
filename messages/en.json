@@ -32,6 +32,13 @@
   "nickname": "Nickname",
   "firstName": "First name",
   "lastName": "Last name",
+  "R": "Red",
+  "G": "Green",
+  "B": "Blue",
+  "H": "Hue",
+  "S": "Saturation",
+  "L": "Light",
+  "A": "Alpha",
   "authorDeleted": "Author deleted",
   "missingId": "Missing ID",
   "missingRequiredParameters": "Missing required parameters: {parameters}",
@@ -42,6 +49,7 @@
   "posts": "Posts",
   "tags": "Tags",
   "name": "Name",
+  "color": "Color",
   "categoryDeleted": "Category deleted",
   "createCategory": "Create category",
   "categoryCreationSuccessful": "Category successfully created",
@@ -55,5 +63,6 @@
   "postDeleted": "Post deleted",
   "draft": "Draft",
   "postSaved": "Post saved",
-  "errorWhileSaving": "Error while saving"
+  "errorWhileSaving": "Error while saving",
+  "placeholderName": "Insert name..."
 }
