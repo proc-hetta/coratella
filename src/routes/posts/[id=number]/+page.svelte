@@ -2,6 +2,7 @@
   import { Avatar, ProgressRing } from '@skeletonlabs/skeleton-svelte';
   import { getMarkdownProcessors } from '$lib/marked.js';
   import DOMPurify from 'isomorphic-dompurify';
+  import CategoryBadge from '$lib/components/CategoryBadge.svelte';
 
   let { data } = $props();
   let post = data.post;
@@ -15,12 +16,7 @@
     </h2>
     <div class="mt-5 flex w-full gap-2">
       {#each post.categories as category (category.id)}
-        <div
-          class="badge preset-filled-primary-500 h-fit"
-          style="background-color: {category.color};"
-        >
-          {category.name}
-        </div>
+        <CategoryBadge text={category.name} colorText={category.color} />
       {/each}
     </div>
     <div class="mt-5 flex w-full flex-wrap gap-2">

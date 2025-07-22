@@ -7,7 +7,9 @@
   import AdministrationCard from '$lib/components/AdministrationCard.svelte';
   import CategoryFormModal from '$lib/components/CategoryFormModal.svelte';
 
-  import type { HSL, RGB } from '$lib/server/db/color';
+  import Color from 'color';
+  import type { ColorInstance } from 'color';
+  import type { RGB } from '$lib/server/db/color';
 
   let { data } = $props();
   let categories = $state(data.categories);
@@ -17,15 +19,24 @@
     categories = data.categories;
   });
 
+  export const rgb = (color: ColorInstance): RGB => {
+    const [r, g, b] = color.toJSON().color;
+    return {
+      r,
+      g,
+      b,
+    };
+  };
+
   let createModalOpen = $state(false);
   let editModalOpen = $state(false);
 
   let formName: string = $state('');
   let formId: number | null = $state(null);
-  let formColor: HSL | null = $state({
-    h: 0,
-    s: 0,
-    l: 0,
+  let formColor: RGB | null = $state({
+    r: 0,
+    g: 0,
+    b: 0,
   });
 
   async function deleteCategory(id: number) {
@@ -52,67 +63,16 @@
   function openCreateCategoryModal() {
     formName = '';
     formId = null;
-    formColor = rgbToHsl(hexToRgb('#000000'));
+    formColor = rgb(Color('#000000'));
     createModalOpen = true;
   }
 
-  function openEditCategoryModal(id: number, name: string, color: HSL) {
+  function openEditCategoryModal(id: number, name: string, color: RGB) {
     console.log(color);
     formName = name;
     formId = id;
     formColor = color;
     editModalOpen = true;
-  }
-
-  function rgbToHsl(color: RGB): HSL {
-    let { r, g, b } = color;
-
-    r /= 255;
-    g /= 255;
-    b /= 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const delta = max - min;
-    const l = (max + min) / 2;
-
-    let h = 0;
-    let s = 0;
-
-    if (delta !== 0) {
-      s = delta / (1 - Math.abs(2 * l - 1));
-
-      if (max === r) {
-        h = (g - b) / delta;
-      } else if (max === g) {
-        h = (b - r) / delta + 2;
-      } else {
-        h = (r - g) / delta + 4;
-      }
-
-      h *= 60;
-      if (h < 0) {
-        h += 360;
-      }
-    }
-
-    return {
-      h: Math.round(h),
-      s: Math.round(s * 100),
-      l: Math.round(l * 100),
-    };
-  }
-
-  function hexToRgb(hexString: string): RGB {
-    if (!hexString.match(/^#[0-9A-Fa-f]{6}$/)) {
-      throw new Error('String is not a valid hexadecimal RGB color');
-    }
-    hexString = hexString.split('#')[1];
-    const r = parseInt(hexString.substring(0, 2), 16);
-    const g = parseInt(hexString.substring(2, 4), 16);
-    const b = parseInt(hexString.substring(4, 6), 16);
-
-    return { r, g, b };
   }
 </script>
 
@@ -137,11 +97,8 @@
               <button
                 class="btn-icon"
                 onclick={() =>
-                  openEditCategoryModal(
-                    row.id,
-                    row.name,
-                    rgbToHsl(hexToRgb(row.color ?? '#000000')),
-                  )}><Pencil /></button
+                  openEditCategoryModal(row.id, row.name, rgb(Color(row.color ?? '#000000')))}
+                ><Pencil /></button
               >
               <button class="btn-icon" onclick={() => deleteCategory(row.id)}><Trash /></button>
             </div>

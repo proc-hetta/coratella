@@ -1,4 +1,5 @@
 <script lang="ts">
+  import CategoryBadge from '$lib/components/CategoryBadge.svelte';
   import Logo from '$lib/images/logo.svg';
   import { Avatar } from '@skeletonlabs/skeleton-svelte';
 
@@ -37,12 +38,7 @@
                     class="mt-2 mb-2 flex h-min w-fit max-w-3xs flex-wrap justify-end gap-2 md:hidden md:min-w-50"
                   >
                     {#each post.categories as category}
-                      <div
-                        class="badge preset-filled-primary-500 h-fit"
-                        style="background-color: {category.color};"
-                      >
-                        {category.name}
-                      </div>
+                      <CategoryBadge text={category.name} colorText={category.color} />
                     {/each}
                   </div>
                   <div>Created at: {post.ctime.toDateString()}</div>
@@ -76,12 +72,7 @@
                 class="hidden h-min w-fit max-w-3xs flex-wrap justify-end gap-2 md:flex md:min-w-50"
               >
                 {#each post.categories as category}
-                  <div
-                    class="badge preset-filled-primary-500 h-fit"
-                    style="background-color: {category.color};"
-                  >
-                    {category.name}
-                  </div>
+                  <CategoryBadge text={category.name} colorText={category.color} />
                 {/each}
               </div>
             </div>

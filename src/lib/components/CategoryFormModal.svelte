@@ -3,7 +3,8 @@
   import { m } from '$lib/paraglide/messages';
   import { coratellaFormCallback } from '$lib/utils';
   import { Modal, ProgressRing, Slider } from '@skeletonlabs/skeleton-svelte';
-  import type { HSL, RGB } from '$lib/server/db/color';
+  import CategoryBadge from './CategoryBadge.svelte';
+  import Color from 'color';
 
   let {
     title,
@@ -19,32 +20,10 @@
 
   let running = $state(false);
   let form: HTMLFormElement | undefined = $state();
+  let colorProfile = $derived(Color(color));
+  let colorString = $derived(colorProfile.hex());
 
-  function hslToRgb(color: HSL): RGB {
-    let { h, s, l } = color;
-
-    s /= 100;
-    l /= 100;
-
-    const k = (n: number) => (n + h / 30) % 12;
-    const a = s * Math.min(l, 1 - l);
-    const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-
-    return { r: Math.round(f(0) * 255), g: Math.round(f(8) * 255), b: Math.round(f(4) * 255) };
-  }
-
-  function rgbToHex(color: RGB): string {
-    let { r, g, b } = color;
-    return (
-      '#' +
-      [r, g, b]
-        .map((x) => x.toString(16).padStart(2, '0'))
-        .join('')
-        .toLowerCase()
-    );
-  }
-
-  let colorString = $derived(rgbToHex(hslToRgb(color)));
+  name = name === '' ? m.placeholderName() : name;
 </script>
 
 <Modal
@@ -80,73 +59,71 @@
             <input class="input" type="text" bind:value={name} name="name" />
           </label>
           <label class="label">
-            <span class="label-text text-left">{m.H()}</span>
+            <span class="label-text text-left">{m.R()}</span>
             <input
               type="number"
               class="input"
-              bind:value={color.h}
+              bind:value={color.r}
               min="0"
               max="255"
               placeholder=""
             />
           </label>
           <label class="label">
-            <span class="label-text text-left">{m.S()}</span>
+            <span class="label-text text-left">{m.G()}</span>
             <input
               type="number"
               class="input"
-              bind:value={color.s}
+              bind:value={color.g}
               min="0"
               max="255"
               placeholder=""
             />
           </label>
           <label class="label">
-            <span class="label-text text-left">{m.L()}</span>
+            <span class="label-text text-left">{m.B()}</span>
             <input
               type="number"
               class="input"
-              bind:value={color.l}
+              bind:value={color.b}
               min="0"
               max="255"
               placeholder=""
             />
           </label>
           <label class="label">
-            <p>{m.H()}</p>
+            <p>{m.R()}</p>
             <Slider
               name="value"
-              value={[color.h]}
+              value={[colorProfile.red()]}
               onValueChange={(e) => {
-                color.h = e.value[0];
+                color.r = e.value[0];
               }}
+              max={255}
             />
-            <p>{m.S()}</p>
+            <p>{m.G()}</p>
             <Slider
               name="value"
-              value={[color.s]}
+              value={[colorProfile.green()]}
               onValueChange={(e) => {
-                color.s = e.value[0];
+                color.g = e.value[0];
               }}
+              max={255}
             />
-            <p>{m.L()}</p>
+            <p>{m.B()}</p>
             <Slider
               name="value"
-              value={[color.l]}
+              value={[colorProfile.blue()]}
               onValueChange={(e) => {
-                color.l = e.value[0];
+                color.b = e.value[0];
               }}
+              max={255}
             />
           </label>
         </div>
         <input type="hidden" name="color" value={colorString} />
         <input type="hidden" name="id" value={id} />
-        <div
-          class="badge preset-filled-primary-500 mt-2.5 h-fit"
-          style="background-color: {colorString};"
-        >
-          {name === '' ? m.placeholderName() : name}
-        </div>
+        <CategoryBadge bind:text={name} bind:colorText={colorString} />
       </form>
     </article>
 
