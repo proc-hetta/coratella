@@ -28,8 +28,8 @@
   <div class="flex flex-col justify-center gap-5">
     {#each posts as post (post.id)}
       <a href="/posts/{post.id}">
-        <div class="card preset-filled-surface-100-900 flex w-full flex-col gap-10 px-8">
-          <div class="w-full py-8">
+        <div class="card preset-filled-surface-100-900 flex w-full flex-col gap-10 px-5">
+          <div class="w-full py-4">
             <div class="flex">
               <div class="w-full">
                 <h3 class="h3 w-full">{post.title}</h3>
@@ -62,7 +62,7 @@
                     </div>
                   {/each}
                 </div>
-                <div class="items-top my-2 mt-5 flex justify-start gap-2 divide-x md:hidden">
+                <div class="items-top my-2 mt-5 flex justify-start gap-2 divide-x flex-wrap md:hidden">
                   {#each post.tags as tag}
                     <div class="badge preset-outlined-primary-500 h-fit">#{tag.name}</div>
                   {/each}
