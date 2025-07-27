@@ -71,7 +71,7 @@
                 </div>
               </div>
               <div
-                class="hidden h-min w-fit max-w-3xs flex-wrap justify-end gap-2 md:flex md:min-w-50"
+                class="hidden py-2 items-center h-min w-fit max-w-3xs flex-wrap justify-end gap-2 md:flex md:min-w-50"
               >
                 {#each post.categories as category}
                   <CategoryBadge text={category.name} colorText={category.color} />
