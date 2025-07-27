@@ -64,5 +64,8 @@
   "draft": "Bozza",
   "postSaved": "Post salvato",
   "errorWhileSaving": "Errore durante il salvataggio",
-  "placeholderName": "Inserisci un nome..."
+  "placeholderName": "Inserisci un nome...",
+  "email": "Email",
+  "incorrectRequiredParameters": "Parametri obbligatori incorretti: {parameters}",
+  "missingEmail": "Email Mancante"
 }

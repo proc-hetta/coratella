@@ -62,7 +62,9 @@
                     </div>
                   {/each}
                 </div>
-                <div class="items-top my-2 mt-5 flex justify-start gap-2 divide-x flex-wrap md:hidden">
+                <div
+                  class="items-top my-2 mt-5 flex flex-wrap justify-start gap-2 divide-x md:hidden"
+                >
                   {#each post.tags as tag}
                     <div class="badge preset-outlined-primary-500 h-fit">#{tag.name}</div>
                   {/each}

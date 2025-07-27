@@ -16,6 +16,7 @@ export const authors = pgTable('authors', {
   lastName: text('last_name'),
   nickname: text('nickname').notNull().unique(),
   image: text('image'),
+  email: text('email').unique(),
 });
 
 export const tags = pgTable('tags', {
