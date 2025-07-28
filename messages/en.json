@@ -64,5 +64,8 @@
   "draft": "Draft",
   "postSaved": "Post saved",
   "errorWhileSaving": "Error while saving",
-  "placeholderName": "Insert name..."
+  "placeholderName": "Insert name...",
+  "email": "Email",
+  "missingEmail": "Missing Email",
+  "incorrectRequiredParameters": "Incorrect required parameters: {parameters}"
 }

@@ -15,6 +15,7 @@
 
     modalOpen = $bindable(),
     nickname = $bindable(),
+    email = $bindable(),
     firstName = $bindable(),
     lastName = $bindable(),
     image = $bindable(),
@@ -89,6 +90,10 @@
           <label class="label">
             <span class="label-text text-left">{m.nickname()}</span>
             <input class="input" type="text" bind:value={nickname} name="nickname" />
+          </label>
+          <label class="label">
+            <span class="label-text text-left">{m.email()}</span>
+            <input class="input" type="text" bind:value={email} name="email" />
           </label>
           <label class="label">
             <span class="label-text text-left">{m.firstName()}</span>

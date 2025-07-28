@@ -25,6 +25,7 @@
   let formImage: string | null = $state(null);
   let formId: number | null = $state(null);
   let formImageFile: File | undefined = $state(undefined);
+  let formEmail: string | null = $state('');
 
   async function deleteAuthor(id: number) {
     const response = await fetch(`/admin/authors/${id}`, {
@@ -55,10 +56,12 @@
     formImage = null;
     formImageFile = undefined;
     createModalOpen = true;
+    formEmail = '';
   }
 
   function openEditAuthorModal(
     id: number,
+    email: string,
     nickname: string,
     firstName: string,
     lastName: string,
@@ -70,6 +73,7 @@
     formId = id;
     formImage = image;
     formImageFile = undefined;
+    formEmail = email;
     editModalOpen = true;
   }
 </script>
@@ -81,6 +85,7 @@
         <th>Id</th>
         <th>{m.image()}</th>
         <th>{m.nickname()}</th>
+        <th>{m.email()}</th>
         <th>{m.firstName()}</th>
         <th>{m.lastName()}</th>
         <th class="!text-right">{m.actions()}</th>
@@ -94,6 +99,7 @@
             ><Avatar size="size-8" src={row.image ?? undefined} name={row.nickname} /></td
           >
           <td class="text-left">{row.nickname}</td>
+          <td class="text-left">{row.email}</td>
           <td class="text-left">{row.firstName}</td>
           <td class="text-left">{row.lastName}</td>
           <td class="text-right">
@@ -103,6 +109,7 @@
                 onclick={() =>
                   openEditAuthorModal(
                     row.id,
+                    row.email,
                     row.nickname,
                     row.firstName ?? '',
                     row.lastName ?? '',
@@ -125,6 +132,7 @@
   successMessage={m.authorCreationSuccessful()}
   bind:modalOpen={createModalOpen}
   bind:nickname={formNickname}
+  bind:email={formEmail}
   bind:firstName={formFirstName}
   bind:lastName={formLastName}
   bind:image={formImage}
@@ -139,6 +147,7 @@
   successMessage={m.successfulModification()}
   bind:modalOpen={editModalOpen}
   bind:nickname={formNickname}
+  bind:email={formEmail}
   bind:firstName={formFirstName}
   bind:lastName={formLastName}
   bind:image={formImage}

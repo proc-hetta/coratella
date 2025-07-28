@@ -52,7 +52,10 @@
               src={author.image ?? undefined}
               name="{author.firstName} {author.lastName}"
             />
-            <div>{author.firstName} {author.lastName}</div>
+            <div class="w-full flex gap-2 flex-col md:flex-row">
+              {author.firstName} {author.lastName}
+              {#if author.email } <div class="w-fit">(<a class="underline" href="mailto:{author.email}">{author.email}</a>)</div> {/if}
+            </div>
           </div>
         {/each}
       </div>

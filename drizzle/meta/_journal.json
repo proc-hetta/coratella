@@ -15,6 +15,13 @@
       "when": 1753047588697,
       "tag": "0001_add_color_to_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1753571235261,
+      "tag": "0002_add_email_to_authors",
+      "breakpoints": true
     }
   ]
 }

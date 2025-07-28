@@ -62,14 +62,16 @@
                     </div>
                   {/each}
                 </div>
-                <div class="items-top my-2 mt-5 flex justify-start gap-2 divide-x flex-wrap md:hidden">
+                <div
+                  class="items-top my-2 mt-5 flex flex-wrap justify-start gap-2 divide-x md:hidden"
+                >
                   {#each post.tags as tag}
                     <div class="badge preset-outlined-primary-500 h-fit">#{tag.name}</div>
                   {/each}
                 </div>
               </div>
               <div
-                class="hidden h-min w-fit max-w-3xs flex-wrap justify-end gap-2 md:flex md:min-w-50"
+                class="hidden py-2 items-center h-min w-fit max-w-3xs flex-wrap justify-end gap-2 md:flex md:min-w-50"
               >
                 {#each post.categories as category}
                   <CategoryBadge text={category.name} colorText={category.color} />

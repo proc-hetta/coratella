@@ -4,6 +4,7 @@ import { authors } from '$lib/server/db/schema';
 
 export async function updateAuthor(
   id: number,
+  email?: string,
   nickname?: string,
   firstName?: string,
   lastName?: string,
@@ -11,12 +12,16 @@ export async function updateAuthor(
 ) {
   const updateSet: {
     nickname?: string;
+    email?: string;
     firstName?: string;
     lastName?: string;
     image?: string | null;
   } = {};
   if (nickname) {
     updateSet.nickname = nickname;
+  }
+  if (email) {
+    updateSet.email = email;
   }
   if (firstName) {
     updateSet.firstName = firstName;
@@ -33,6 +38,7 @@ export async function updateAuthor(
 
 export async function createAuthor(
   nickname: string,
+  email?: string,
   firstName?: string,
   lastName?: string,
   image?: string,
@@ -44,6 +50,7 @@ export async function createAuthor(
       firstName,
       lastName,
       image,
+      email,
     })
     .returning();
 }
@@ -56,6 +63,7 @@ export async function getAuthors() {
       firstName: authors.firstName,
       lastName: authors.lastName,
       image: authors.image,
+      email: authors.email,
     })
     .from(authors)
     .orderBy(authors.id);
