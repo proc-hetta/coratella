@@ -52,7 +52,6 @@ export async function validateSessionToken(token: string) {
 export function setSessionTokenCookie(event: RequestEvent, token: string, exp: number) {
   event.cookies.set(sessionCookieName, token, {
     expires: new Date(exp * 1000),
-    secure: false, // REMOVE
     path: '/',
   });
 }
@@ -60,6 +59,5 @@ export function setSessionTokenCookie(event: RequestEvent, token: string, exp: n
 export function deleteSessionTokenCookie(event: RequestEvent) {
   event.cookies.delete(sessionCookieName, {
     path: '/',
-    secure: false, // REMOVE
   });
 }
