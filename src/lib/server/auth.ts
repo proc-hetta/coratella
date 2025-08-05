@@ -33,7 +33,7 @@ export async function validateSessionToken(token: string) {
   }
 
   // Check if the session is expired
-  if (payload.exp! > Date.now()) {
+  if (payload.exp! < Math.floor(Date.now() / 1000)) {
     return {
       user: null,
       payload: null,
