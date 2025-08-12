@@ -227,6 +227,8 @@
           <div class="prose prose-neutral prose-invert max-w-none">
             {@html DOMPurify.sanitize(processed)}
           </div>
+        {:catch e}
+          <h1 class="h1">{m.error()}</h1>
         {/await}
       </Tabs.Panel>
     {/snippet}
