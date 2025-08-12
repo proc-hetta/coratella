@@ -21,7 +21,9 @@ export function getMarkdownProcessors(useLatex: boolean, useToc: boolean) {
     gfm: true,
   });
   if (useLatex) {
-    marked.use(markedKatex({}));
+    marked.use(markedKatex({
+      throwOnError: false,
+    }));
   }
   let textProcessor = useToc ? remark().use(remarkToc) : remark();
 
