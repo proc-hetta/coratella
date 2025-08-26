@@ -62,9 +62,17 @@
     "marked-highlight": "^2.2.1",
     "marked-katex-extension": "^5.1.4",
     "postgres": "^3.4.5",
+    "rehype-katex": "^7.0.1",
+    "rehype-stringify": "^10.0.1",
     "remark": "^15.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "remark-stringify": "^11.0.0",
     "remark-toc": "^9.0.0",
     "tsx": "^4.19.3",
+    "unified": "^11.0.5",
     "uuid": "^11.1.0"
   },
   "pnpm": {
