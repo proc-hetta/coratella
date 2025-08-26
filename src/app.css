@@ -21,3 +21,11 @@
 pre {
   padding: 0;
 }
+
+code::before {
+  content: '';
+}
+
+code::after {
+  content: '';
+}
