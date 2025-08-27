@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy, onMount } from 'svelte';
   import { m } from '$lib/paraglide/messages';
   import type { Author, Category, Tag } from '$lib/server/db/schema.js';
   import { Tabs } from '@skeletonlabs/skeleton-svelte';
@@ -8,7 +9,8 @@
   import { type FullPost } from '$lib/server/db/posts.js';
   import { goto, invalidateAll } from '$app/navigation';
   import { toaster, toasterOptions } from '$lib/toaster.js';
-  import { socket, messageStore, sendMessage } from '$lib/sstore.js';
+
+  const socket = new WebSocket('ws://localhost:5555');
 
   const defaultPost = {
     id: -1,
@@ -39,7 +41,7 @@
 
   // Connection opened
   socket.addEventListener('open', function (event) {
-    console.log("It's open from the editor");
+    console.log('Editor is connected');
   });
 
   // Listen for messages
@@ -47,7 +49,7 @@
     remoteEditing = true;
     if (typeof event.data === 'string') {
       if (event.data === 'EOL') {
-        // socket.close();
+        console.warn('A client has closed its connection');
         remoteEditing = false;
         return;
       }
@@ -130,6 +132,10 @@
       });
     }
   }
+
+  onDestroy(() => {
+    socket.close();
+  });
 </script>
 
 <div class="flex flex-col items-center gap-2">
