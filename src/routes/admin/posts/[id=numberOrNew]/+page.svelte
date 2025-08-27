@@ -8,6 +8,7 @@
   import { type FullPost } from '$lib/server/db/posts.js';
   import { goto, invalidateAll } from '$app/navigation';
   import { toaster, toasterOptions } from '$lib/toaster.js';
+  import { socket, messageStore, sendMessage } from '$lib/sstore.js';
 
   const defaultPost = {
     id: -1,
@@ -31,8 +32,38 @@
   let categories = $state(data.categories);
   let authors = $state(data.authors);
   let { marked, remark } = $derived(getMarkdownProcessors(post.math, post.toc));
+  // disable the text input for as long as other clients exist to prevent messing up.
+  let remoteEditing = $state(false);
 
   let group = $state('editor');
+
+  // Connection opened
+  socket.addEventListener('open', function (event) {
+    console.log("It's open from the editor");
+  });
+
+  // Listen for messages
+  socket.addEventListener('message', function (event) {
+    remoteEditing = true;
+    if (typeof event.data === 'string') {
+      if (event.data === 'EOL') {
+        // socket.close();
+        remoteEditing = false;
+        return;
+      }
+      post.content = event.data;
+    } else {
+      console.warn('Received %s : %s', typeof event.data, event.data);
+    }
+  });
+
+  socket.addEventListener('error', console.error);
+
+  socket.addEventListener('close', (_) => {
+    // this could trigger a "save as draft" for final manual review
+    // so we could support remote editing.
+    console.log('Editor is closed');
+  });
 
   function testTag(tag: Tag) {
     return post.tags.some((e) => e.id == tag.id);
@@ -217,7 +248,12 @@
     {/snippet}
     {#snippet content()}
       <Tabs.Panel value="editor"
-        ><textarea bind:value={post.content} class="textarea" rows="30" placeholder={m.content()}
+        ><textarea
+          disabled={remoteEditing}
+          bind:value={post.content}
+          class="textarea"
+          rows="30"
+          placeholder={m.content()}
         ></textarea></Tabs.Panel
       >
       <Tabs.Panel value="preview">
