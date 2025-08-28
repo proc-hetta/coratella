@@ -9,8 +9,10 @@
   import { type FullPost } from '$lib/server/db/posts.js';
   import { goto, invalidateAll } from '$app/navigation';
   import { toaster, toasterOptions } from '$lib/toaster.js';
+  import { WS_URL } from '$lib/ssocket.js';
+  import { dev } from '$app/environment';
 
-  const socket = new WebSocket('ws://localhost:5555');
+  const socket = new WebSocket(WS_URL);
 
   const defaultPost = {
     id: -1,
@@ -41,7 +43,9 @@
 
   // Connection opened
   socket.addEventListener('open', function (event) {
-    console.log('Editor is connected');
+    if (dev) {
+      console.log('Editor is connected');
+    }
   });
 
   // Listen for messages
@@ -49,13 +53,17 @@
     remoteEditing = true;
     if (typeof event.data === 'string') {
       if (event.data === 'EOL') {
-        console.warn('A client has closed its connection');
+        if (dev) {
+          console.warn('A client has closed its connection');
+        }
         remoteEditing = false;
         return;
       }
       post.content = event.data;
     } else {
-      console.warn('Received %s : %s', typeof event.data, event.data);
+      if (dev) {
+        console.warn('Received %s : %s', typeof event.data, event.data);
+      }
     }
   });
 
@@ -64,7 +72,9 @@
   socket.addEventListener('close', (_) => {
     // this could trigger a "save as draft" for final manual review
     // so we could support remote editing.
-    console.log('Editor is closed');
+    if (dev) {
+      console.log('Editor is closed');
+    }
   });
 
   function testTag(tag: Tag) {

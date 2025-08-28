@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev:svelte": "vite dev",
-    "dev:ws": "node ./src/lib/ssocket.js",
+    "dev:ws": "node ./src/lib/ssocket.ts",
     "dev": "concurrently 'npm:dev:*'",
     "build": "vite build",
     "preview": "vite preview",
