@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import * as schema from './schema';
 import { v4 as uuidv4 } from 'uuid';
 import { drizzle } from 'drizzle-orm/postgres-js';
+import { exit } from 'node:process';
 
 dotenv.config({ path: './.env' });
 
@@ -22,4 +23,7 @@ const main = async () => {
     .execute();
 };
 
-main().then(() => console.log('Seeding done! press ctrl+C to close'));
+main().then(() => {
+  console.log('Seeding done!');
+  exit(0);
+});
