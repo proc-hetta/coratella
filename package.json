@@ -4,7 +4,9 @@
   "version": "1.2.1",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev:svelte": "vite dev --host 0.0.0.0",
+    "dev:ws": "node ./src/lib/ssocket.ts",
+    "dev": "concurrently 'npm:dev:*'",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",
@@ -31,6 +33,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@types/highlightjs": "^9.12.6",
     "@types/node": "^22.14.1",
+    "@types/ws": "^8.18.1",
     "drizzle-kit": "^0.30.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -53,6 +56,7 @@
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
     "color": "^5.0.0",
+    "concurrently": "^9.2.1",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.40.0",
     "highlight.js": "^11.11.1",
@@ -74,7 +78,8 @@
     "remark-toc": "^9.0.0",
     "tsx": "^4.19.3",
     "unified": "^11.0.5",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "ws": "^8.18.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
