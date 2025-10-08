@@ -67,5 +67,13 @@
   "placeholderName": "Inserisci un nome...",
   "email": "Email",
   "incorrectRequiredParameters": "Parametri obbligatori incorretti: {parameters}",
-  "missingEmail": "Email Mancante"
+  "missingEmail": "Email Mancante",
+  "confirm": "Confermo",
+  "cancel": "Cancella",
+  "deletePrompt": "Vuoi eliminare {parameter}?",
+  "deletePost": "Elimina post",
+  "deleteTag": "Elimina tag",
+  "deleteCategory": "Elimina categoria",
+  "deleteUser": "Elimina utente",
+  "deleteAuthor": "Elimina autore"
 }

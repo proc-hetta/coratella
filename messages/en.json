@@ -52,6 +52,11 @@
   "color": "Color",
   "categoryDeleted": "Category deleted",
   "createCategory": "Create category",
+  "deletePost": "Delete post",
+  "deleteTag": "Delete tag",
+  "deleteCategory": "Delete category",
+  "deleteUser": "Delete user",
+  "deleteAuthor": "Delete author",
   "categoryCreationSuccessful": "Category successfully created",
   "tagDeleted": "Tag deleted",
   "createTag": "Create tag",
@@ -67,5 +72,8 @@
   "placeholderName": "Insert name...",
   "email": "Email",
   "missingEmail": "Missing Email",
-  "incorrectRequiredParameters": "Incorrect required parameters: {parameters}"
+  "incorrectRequiredParameters": "Incorrect required parameters: {parameters}",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "deletePrompt": "Do you want to delete {parameter}?"
 }

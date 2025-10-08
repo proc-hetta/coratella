@@ -7,9 +7,14 @@
   import AuthorFormModal from '$lib/components/AuthorFormModal.svelte';
   import AdministrationCard from '$lib/components/AdministrationCard.svelte';
   import { Avatar } from '@skeletonlabs/skeleton-svelte';
+  import DialogModal from '$lib/components/DialogModal.svelte';
 
   let { data } = $props();
   let authors = $state(data.authors);
+  let selected_id = $state(NaN);
+  let selected_author = $state('');
+  let dialog: HTMLDialogElement | undefined = $state();
+  let dialogOpen = $state(false);
 
   // https://www.reddit.com/r/sveltejs/comments/1gx65ho/proper_page_data_and_reactivity_pattern_in_svelte/
   $effect(() => {
@@ -46,6 +51,7 @@
         ...toasterOptions,
       });
     }
+    dialogOpen = false;
   }
 
   function openCreateAuthorModal() {
@@ -77,6 +83,15 @@
     editModalOpen = true;
   }
 </script>
+
+<DialogModal
+  title={m.deleteAuthor()}
+  {dialog}
+  prompt={m.deletePrompt({ parameter: selected_author })}
+  onAccept={() => deleteAuthor(selected_id)}
+  onClose={() => (dialogOpen = false)}
+  {dialogOpen}
+></DialogModal>
 
 <AdministrationCard title={m.authors()} addButtonAction={openCreateAuthorModal}>
   <table class="table whitespace-nowrap">
@@ -116,7 +131,15 @@
                     row.image,
                   )}><Pencil /></button
               >
-              <button class="btn-icon" onclick={() => deleteAuthor(row.id)}><Trash /></button>
+              <button
+                class="btn-icon"
+                onclick={() => {
+                  selected_id = row.id;
+                  selected_author = row.nickname;
+                  dialogOpen = true;
+                  dialog?.showModal();
+                }}><Trash /></button
+              >
             </div>
           </td>
         </tr>

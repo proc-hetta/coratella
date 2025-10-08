@@ -5,6 +5,7 @@
   import { Trash, Pencil } from '@lucide/svelte';
   import AdministrationCard from '$lib/components/AdministrationCard.svelte';
   import UserFormModal from '$lib/components/UserFormModal.svelte';
+  import DialogModal from '$lib/components/DialogModal.svelte';
 
   let { data } = $props();
   let users = $state(data.users);
@@ -22,6 +23,11 @@
   let formUsername: string = $state('');
   let formPassword: string = $state('');
   let formId: string = $state('');
+
+  let selected_user = $state('');
+  let selected_username = $state('');
+  let dialog: HTMLDialogElement | undefined = $state();
+  let dialogOpen = $state(false);
 
   async function deleteUser(id: string) {
     const response = await fetch(`/admin/users/${id}`, {
@@ -42,6 +48,7 @@
         ...toasterOptions,
       });
     }
+    dialogOpen = false;
   }
 
   function openCreateUserModal() {
@@ -58,6 +65,15 @@
     editModalOpen = true;
   }
 </script>
+
+<DialogModal
+  title={m.deleteUser()}
+  {dialog}
+  prompt={m.deletePrompt({ parameter: selected_username })}
+  onAccept={() => deleteUser(selected_user)}
+  onClose={() => (dialogOpen = false)}
+  {dialogOpen}
+></DialogModal>
 
 <AdministrationCard title={m.users()} addButtonAction={openCreateUserModal}>
   <table class="table whitespace-nowrap">
@@ -84,7 +100,12 @@
               >
               <button
                 class="btn-icon"
-                onclick={() => deleteUser(row.id)}
+                onclick={() => {
+                  selected_user = row.id;
+                  selected_username = row.username;
+                  dialogOpen = true;
+                  dialog?.showModal();
+                }}
                 disabled={row.id === user.id}><Trash /></button
               >
             </div>

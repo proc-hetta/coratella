@@ -53,6 +53,7 @@ export function setSessionTokenCookie(event: RequestEvent, token: string, exp: n
   event.cookies.set(sessionCookieName, token, {
     expires: new Date(exp * 1000),
     path: '/',
+    secure: false,
   });
 }
 

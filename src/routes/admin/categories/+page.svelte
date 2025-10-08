@@ -10,9 +10,14 @@
   import Color from 'color';
   import type { ColorInstance } from 'color';
   import type { RGB } from '$lib/server/db/color';
+  import DialogModal from '$lib/components/DialogModal.svelte';
 
   let { data } = $props();
   let categories = $state(data.categories);
+  let selected_id = $state(NaN);
+  let selected_category = $state('');
+  let dialog: HTMLDialogElement | undefined = $state();
+  let dialogOpen = $state(false);
 
   // https://www.reddit.com/r/sveltejs/comments/1gx65ho/proper_page_data_and_reactivity_pattern_in_svelte/
   $effect(() => {
@@ -58,6 +63,7 @@
         ...toasterOptions,
       });
     }
+    dialogOpen = false;
   }
 
   function openCreateCategoryModal() {
@@ -75,6 +81,15 @@
     editModalOpen = true;
   }
 </script>
+
+<DialogModal
+  title={m.deleteCategory()}
+  {dialog}
+  prompt={m.deletePrompt({ parameter: selected_category })}
+  onAccept={() => deleteCategory(selected_id)}
+  onClose={() => (dialogOpen = false)}
+  {dialogOpen}
+></DialogModal>
 
 <AdministrationCard title={m.categories()} addButtonAction={openCreateCategoryModal}>
   <table class="table whitespace-nowrap">
@@ -100,7 +115,15 @@
                   openEditCategoryModal(row.id, row.name, rgb(Color(row.color ?? '#000000')))}
                 ><Pencil /></button
               >
-              <button class="btn-icon" onclick={() => deleteCategory(row.id)}><Trash /></button>
+              <button
+                class="btn-icon"
+                onclick={() => {
+                  selected_id = row.id;
+                  selected_category = row.name;
+                  dialogOpen = true;
+                  dialog?.showModal();
+                }}><Trash /></button
+              >
             </div>
           </td>
         </tr>

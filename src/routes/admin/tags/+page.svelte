@@ -6,9 +6,14 @@
 
   import NameFormModal from '$lib/components/NameFormModal.svelte';
   import AdministrationCard from '$lib/components/AdministrationCard.svelte';
+  import DialogModal from '$lib/components/DialogModal.svelte';
 
   let { data } = $props();
   let tags = $state(data.tags);
+  let selected_id = $state(NaN);
+  let selected_tag = $state('');
+  let dialog: HTMLDialogElement | undefined = $state();
+  let dialogOpen = $state(false);
 
   // https://www.reddit.com/r/sveltejs/comments/1gx65ho/proper_page_data_and_reactivity_pattern_in_svelte/
   $effect(() => {
@@ -40,6 +45,7 @@
         ...toasterOptions,
       });
     }
+    dialogOpen = false;
   }
 
   function openCreateTagModal() {
@@ -54,6 +60,15 @@
     editModalOpen = true;
   }
 </script>
+
+<DialogModal
+  title={m.deleteTag()}
+  {dialog}
+  prompt={m.deletePrompt({ parameter: selected_tag })}
+  onAccept={() => deleteTag(selected_id)}
+  onClose={() => (dialogOpen = false)}
+  {dialogOpen}
+></DialogModal>
 
 <AdministrationCard title={m.tags()} addButtonAction={openCreateTagModal}>
   <table class="table whitespace-nowrap">
@@ -74,7 +89,15 @@
               <button class="btn-icon" onclick={() => openEditTagModal(row.id, row.name)}
                 ><Pencil /></button
               >
-              <button class="btn-icon" onclick={() => deleteTag(row.id)}><Trash /></button>
+              <button
+                class="btn-icon"
+                onclick={() => {
+                  selected_id = row.id;
+                  selected_tag = row.name;
+                  dialogOpen = true;
+                  dialog?.showModal();
+                }}><Trash /></button
+              >
             </div>
           </td>
         </tr>
