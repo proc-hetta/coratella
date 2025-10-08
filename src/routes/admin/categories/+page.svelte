@@ -144,7 +144,7 @@
 />
 
 <CategoryFormModal
-  title={m.editAuthor()}
+  title={m.editCategory()}
   action="?/edit"
   callback={async () => (editModalOpen = false)}
   successMessage={m.successfulModification()}

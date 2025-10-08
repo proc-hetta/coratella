@@ -46,6 +46,7 @@
   "image": "Image",
   "createAuthor": "Crea autore",
   "editAuthor": "Modifica autore",
+  "editCategory": "Modifica categoria",
   "posts": "Post",
   "tags": "Tag",
   "name": "Name",
