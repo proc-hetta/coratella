@@ -3,13 +3,20 @@
   import type { Author, Category, Tag } from '$lib/server/db/schema.js';
   import { Tabs } from '@skeletonlabs/skeleton-svelte';
   import DOMPurify from 'isomorphic-dompurify';
-  import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
+  import { Progress } from '@skeletonlabs/skeleton-svelte';
   import { getMarkdownProcessors } from '$lib/marked.js';
   import { type FullPost } from '$lib/server/db/posts.js';
   import { goto, invalidateAll } from '$app/navigation';
   import { toaster, toasterOptions } from '$lib/toaster.js';
+  import { browser } from '$app/environment';
 
-  const defaultPost = {
+  let { data } = $props();
+  let sourcePost: FullPost | null = $derived(data.post);
+  let tags = $derived(data.tags);
+  let categories = $derived(data.categories);
+  let authors = $derived(data.authors);
+
+  let post: FullPost = $state({
     id: -1,
     title: '',
     content: '',
@@ -20,16 +27,23 @@
     mtime: new Date(),
     ctime: new Date(),
     visits: 0,
-
     tags: [],
     categories: [],
     authors: [],
-  };
-  let { data } = $props();
-  let post: FullPost = $state(data.post ?? defaultPost);
-  let tags = $state(data.tags);
-  let categories = $state(data.categories);
-  let authors = $state(data.authors);
+  });
+  $effect(() => {
+    if (!sourcePost) return;
+
+    post.title = sourcePost.title;
+    post.content = sourcePost.content;
+    post.password = sourcePost.password;
+    post.draft = sourcePost.draft;
+    post.toc = sourcePost.toc;
+    post.math = sourcePost.math;
+    post.tags = [...sourcePost.tags];
+    post.categories = [...sourcePost.categories];
+    post.authors = [...sourcePost.authors];
+  });
   let { marked, remark } = $derived(getMarkdownProcessors(post.math, post.toc));
 
   let group = $state('editor');
@@ -210,19 +224,19 @@
       </div>
     </form>
   </div>
-  <Tabs value={group} onValueChange={(e) => (group = e.value)}>
-    {#snippet list()}
-      <Tabs.Control value="editor">Editor</Tabs.Control>
-      <Tabs.Control value="preview">Preview</Tabs.Control>
-    {/snippet}
-    {#snippet content()}
-      <Tabs.Panel value="editor"
-        ><textarea bind:value={post.content} class="textarea" rows="30" placeholder={m.content()}
-        ></textarea></Tabs.Panel
-      >
-      <Tabs.Panel value="preview">
+  <Tabs defaultValue={group} onValueChange={(e) => (group = e.value)}>
+    <Tabs.List>
+      <Tabs.Trigger value="editor">Editor</Tabs.Trigger>
+      <Tabs.Trigger value="preview">Preview</Tabs.Trigger>
+    </Tabs.List>
+    <Tabs.Content value="editor"
+      ><textarea bind:value={post.content} class="textarea" rows="30" placeholder={m.content()}
+      ></textarea></Tabs.Content
+    >
+    <Tabs.Content value="preview">
+      {#if browser}
         {#await marked.parse(String(remark.processSync(post.content)))}
-          <ProgressRing value={null} />
+          <Progress value={null} />
         {:then processed}
           <div class="prose prose-neutral prose-invert max-w-none">
             {@html DOMPurify.sanitize(processed)}
@@ -230,7 +244,7 @@
         {:catch e}
           <h1 class="h1">{m.error()}</h1>
         {/await}
-      </Tabs.Panel>
-    {/snippet}
+      {/if}
+    </Tabs.Content>
   </Tabs>
 </div>

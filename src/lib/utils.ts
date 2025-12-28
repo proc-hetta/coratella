@@ -2,13 +2,15 @@ import { toaster, toasterOptions } from '$lib/toaster';
 import { m } from '$lib/paraglide/messages';
 import type { ActionResult } from '@sveltejs/kit';
 
-export function coratellaFormCallback(
-  successMessage: string,
-  invalidateAll: boolean = false,
-  callback: () => Promise<void> = async () => {},
-  preHook: () => void = () => {},
-) {
+export function coratellaFormCallback(params: {
+  successMessage: string;
+  invalidateAll: boolean;
+  callback: () => Promise<void>;
+  preHook: () => void;
+}) {
   return () => {
+    const { successMessage, invalidateAll, callback, preHook } = params;
+
     preHook();
     return async ({
       result,
@@ -32,7 +34,10 @@ export function coratellaFormCallback(
       } else {
         toaster.error({
           title: m.error(),
-          description: result.data.message ?? m.unknownError(),
+          description:
+            result.type == 'failure'
+              ? (result.data?.message ?? m.unknownError())
+              : m.unknownError(),
           ...toasterOptions,
         });
       }

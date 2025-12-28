@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import { m } from '$lib/paraglide/messages';
-import type { PageServerLoad } from '../$types';
+import type { PageServerLoad, RequestEvent } from '../$types';
 import { getAuthors, createAuthor, updateAuthor } from '$lib/server/db/authors';
 
 // RFC2822 Email
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions = {
-  create: async ({ request }) => {
+  create: async ({ request }: RequestEvent) => {
     const data = await request.formData();
 
     const nickname = data.get('nickname');
@@ -42,7 +42,7 @@ export const actions = {
       return fail(500, { message: e.toString() });
     }
   },
-  edit: async ({ request }) => {
+  edit: async ({ request }: RequestEvent) => {
     const data = await request.formData();
 
     const id = data.get('id');

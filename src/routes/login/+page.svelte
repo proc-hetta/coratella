@@ -2,7 +2,7 @@
   import { enhance } from '$app/forms';
   import { m } from '$lib/paraglide/messages';
   import { coratellaFormCallback } from '$lib/utils';
-  import { ProgressRing } from '@skeletonlabs/skeleton-svelte';
+  import { Progress } from '@skeletonlabs/skeleton-svelte';
 
   let running = false;
 </script>
@@ -13,14 +13,14 @@
     <form
       class="mt-8 flex flex-col items-center justify-center gap-2"
       method="POST"
-      use:enhance={coratellaFormCallback(
-        m.loginSuccess(),
-        false,
-        async () => {
+      use:enhance={coratellaFormCallback({
+        successMessage: m.loginSuccess(),
+        invalidateAll: false,
+        callback: async () => {
           running = false;
         },
-        () => (running = true),
-      )}
+        preHook: () => (running = true),
+      })}
     >
       <label class="label">
         <span class="label-text text-left">{m.username()}</span>
@@ -33,12 +33,12 @@
       <button class="btn preset-filled-primary-500 mt-4 w-full md:w-min" disabled={running}
         >{m.login()}
         <div class={running ? '' : 'hidden'}>
-          <ProgressRing
-            value={null}
-            size="size-4"
-            meterStroke="stroke-tertiary-600-400"
-            trackStroke="stroke-tertiary-50-950"
-          />
+          <Progress value={null}>
+            <Progress.Circle class="[--size:--spacing(4)]">
+              <Progress.CircleTrack />
+              <Progress.CircleRange />
+            </Progress.Circle>
+          </Progress>
         </div>
       </button>
     </form>

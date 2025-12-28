@@ -2,8 +2,10 @@
   import { enhance } from '$app/forms';
   import { m } from '$lib/paraglide/messages';
   import { coratellaFormCallback } from '$lib/utils';
+  import { Progress } from '@skeletonlabs/skeleton-svelte';
 
   const { data } = $props();
+  let running = $state(false);
 </script>
 
 <div class="mt-32 flex items-center justify-center">
@@ -12,7 +14,16 @@
     <form
       class="mt-8 flex flex-col items-center justify-center gap-2"
       method="POST"
-      use:enhance={coratellaFormCallback(m.successfulModification())}
+      use:enhance={coratellaFormCallback({
+        successMessage: m.successfulModification(),
+        invalidateAll: false,
+        callback: async () => {
+          running = false;
+        },
+        preHook: () => {
+          running = true;
+        },
+      })}
     >
       <label class="label">
         <span class="label-text text-left">{m.username()}</span>
@@ -26,7 +37,17 @@
         <span class="label-text text-left">{m.repeatNewPassword()}</span>
         <input class="input" type="password" placeholder="*********" name="repeatPassword" />
       </label>
-      <button class="btn preset-filled-primary-500 mt-4 w-full md:w-min">{m.save()}</button>
+      <button class="btn preset-filled-primary-500 mt-4 w-full md:w-min">
+        {m.save()}
+        <div class={running ? '' : 'hidden'}>
+          <Progress value={null}>
+            <Progress.Circle class="[--size:--spacing(4)]">
+              <Progress.CircleTrack />
+              <Progress.CircleRange />
+            </Progress.Circle>
+          </Progress>
+        </div>
+      </button>
     </form>
   </div>
 </div>

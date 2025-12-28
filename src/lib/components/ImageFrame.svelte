@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FileUpload } from '@skeletonlabs/skeleton-svelte';
-  import { X, ImagePlus } from '@lucide/svelte/icons';
+  import { X, ImagePlus, FileUp } from '@lucide/svelte/icons';
 
   interface Props {
     readonly src?: string;
@@ -13,11 +13,16 @@
 
 {#if !src}
   <FileUpload
-    classes="w-full h-full"
     accept="image/*"
     onFileAccept={(details) => onFileAccept(details.files[0])}
+    class="m-0 bg-transparent p-0"
   >
-    {@render imageCard()}
+    <FileUpload.Dropzone class="m-0 h-full w-full bg-transparent p-0">
+      <FileUpload.Trigger class="m-0 h-full w-full bg-transparent p-0"
+        >{@render imageCard()}</FileUpload.Trigger
+      >
+      <FileUpload.HiddenInput />
+    </FileUpload.Dropzone>
   </FileUpload>
 {:else}
   {@render imageCard()}
@@ -26,7 +31,7 @@
 {#snippet imageCard()}
   <div
     class={[
-      'flex aspect-square flex-col items-center justify-center gap-2 overflow-clip rounded-lg shadow-lg contain-content',
+      'flex aspect-square h-full w-full flex-col items-center justify-center gap-2 overflow-clip rounded-lg shadow-lg contain-content',
       src ? 'bg-black' : 'bg-surface-200-800',
     ]}
   >

@@ -2,35 +2,21 @@
   import { toaster, toasterOptions } from '$lib/toaster.js';
   import { m } from '$lib/paraglide/messages';
   import { invalidateAll } from '$app/navigation';
-  import { Trash, Pencil } from '@lucide/svelte';
+  import { Trash, Pencil, Plus } from '@lucide/svelte';
 
-  import AuthorFormModal from '$lib/components/AuthorFormModal.svelte';
   import AdministrationCard from '$lib/components/AdministrationCard.svelte';
   import { Avatar } from '@skeletonlabs/skeleton-svelte';
   import DialogModal from '$lib/components/DialogModal.svelte';
+  import { coratellaFormCallback } from '$lib/utils';
+  import { enhance } from '$app/forms';
+  import ImageFrame from '$lib/components/ImageFrame.svelte';
+  import { tick } from 'svelte';
 
   let { data } = $props();
-  let authors = $state(data.authors);
-  let selected_id = $state(NaN);
-  let selected_author = $state('');
-  let dialog: HTMLDialogElement | undefined = $state();
-  let dialogOpen = $state(false);
+  let authors = $derived(data.authors);
 
-  // https://www.reddit.com/r/sveltejs/comments/1gx65ho/proper_page_data_and_reactivity_pattern_in_svelte/
-  $effect(() => {
-    authors = data.authors;
-  });
-
-  let createModalOpen = $state(false);
-  let editModalOpen = $state(false);
-
-  let formNickname: string = $state('');
-  let formFirstName: string = $state('');
-  let formLastName: string = $state('');
-  let formImage: string | null = $state(null);
-  let formId: number | null = $state(null);
-  let formImageFile: File | undefined = $state(undefined);
-  let formEmail: string | null = $state('');
+  let imageFile: File | null = $state(null);
+  let profileImage: string | null = $state(null);
 
   async function deleteAuthor(id: number) {
     const response = await fetch(`/admin/authors/${id}`, {
@@ -51,49 +37,108 @@
         ...toasterOptions,
       });
     }
-    dialogOpen = false;
-  }
-
-  function openCreateAuthorModal() {
-    formNickname = '';
-    formFirstName = '';
-    formLastName = '';
-    formId = null;
-    formImage = null;
-    formImageFile = undefined;
-    createModalOpen = true;
-    formEmail = '';
-  }
-
-  function openEditAuthorModal(
-    id: number,
-    email: string,
-    nickname: string,
-    firstName: string,
-    lastName: string,
-    image: string | null,
-  ) {
-    formNickname = nickname;
-    formFirstName = firstName;
-    formLastName = lastName;
-    formId = id;
-    formImage = image;
-    formImageFile = undefined;
-    formEmail = email;
-    editModalOpen = true;
   }
 </script>
 
-<DialogModal
-  title={m.deleteAuthor()}
-  {dialog}
-  prompt={m.deletePrompt({ parameter: selected_author })}
-  onAccept={() => deleteAuthor(selected_id)}
-  onClose={() => (dialogOpen = false)}
-  {dialogOpen}
-></DialogModal>
+{#snippet authorForm(
+  authorId: number,
+  nickname: string,
+  firstName: string,
+  lastName: string,
+  image: string | null,
+  email: string | null,
+)}
+  <DialogModal
+    title={Number.isNaN(authorId) ? m.createAuthor() : m.editAuthor()}
+    onAccept={async () => {
+      if (imageFile) {
+        let formData = new FormData();
+        formData.append('file', imageFile);
+        const response = await fetch('/admin/files', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          toaster.error({
+            title: m.error(),
+            description: response.status,
+            ...toasterOptions,
+          });
+          return;
+        }
+        profileImage = await response.headers.get('Location')!;
+        await tick();
+      }
 
-<AdministrationCard title={m.authors()} addButtonAction={openCreateAuthorModal}>
+      const form = document.getElementById(
+        `tag-form-${Number.isNaN(authorId) ? 'new' : authorId}`,
+      ) as HTMLFormElement;
+      form.requestSubmit();
+    }}
+    triggerClass="btn-icon {Number.isNaN(authorId) ? 'w-min self-end' : ''}"
+    onClick={() => {
+      ((profileImage = image), (imageFile = null));
+    }}
+  >
+    {#snippet trigger()}
+      <Plus class={!Number.isNaN(authorId) ? 'hidden' : ''} />
+      <Pencil class={Number.isNaN(authorId) ? 'hidden' : ''} />
+    {/snippet}
+    {#snippet content()}
+      <form
+        id="tag-form-{Number.isNaN(authorId) ? 'new' : authorId}"
+        method="POST"
+        action={Number.isNaN(authorId) ? '?/create' : '?/edit'}
+        class="flex flex-col items-center justify-center gap-2"
+        use:enhance={coratellaFormCallback({
+          successMessage: Number.isNaN(authorId)
+            ? m.authorCreationSuccessful()
+            : m.successfulModification(),
+          invalidateAll: true,
+          callback: async () => {},
+          preHook: () => {},
+        })}
+      >
+        <div class="size-64">
+          <ImageFrame
+            src={imageFile ? URL.createObjectURL(imageFile) : (profileImage ?? undefined)}
+            onFileAccept={(file) => (imageFile = file)}
+            onRemove={() => {
+              imageFile = null;
+              profileImage = null;
+            }}
+          />
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <label class="label">
+            <span class="label-text text-left">{m.nickname()}</span>
+            <input class="input" type="text" value={nickname} name="nickname" />
+          </label>
+          <label class="label">
+            <span class="label-text text-left">{m.email()}</span>
+            <input class="input" type="text" value={email} name="email" />
+          </label>
+          <label class="label">
+            <span class="label-text text-left">{m.firstName()}</span>
+            <input class="input" type="text" value={firstName} name="firstName" />
+          </label>
+          <label class="label">
+            <span class="label-text text-left">{m.lastName()}</span>
+            <input class="input" type="text" value={lastName} name="lastName" />
+          </label>
+        </div>
+        <input type="hidden" name="id" value={authorId} />
+        <input type="hidden" name="image" bind:value={profileImage} />
+      </form>
+    {/snippet}
+  </DialogModal>
+{/snippet}
+
+<AdministrationCard title={m.authors()}>
+  {#snippet addElement()}
+    {@render authorForm(NaN, '', '', '', null, '')}
+  {/snippet}
   <table class="table whitespace-nowrap">
     <thead>
       <tr>
@@ -110,36 +155,40 @@
       {#each authors as row (row.id)}
         <tr>
           <td class="text-left">{row.id}</td>
-          <td class="text-left"
-            ><Avatar size="size-8" src={row.image ?? undefined} name={row.nickname} /></td
-          >
+          <td class="text-left">
+            <Avatar class="size-8">
+              <Avatar.Image src={row.image ?? undefined} alt="base" />
+              <Avatar.Fallback>{row.firstName?.[0]}{row.lastName?.[0]}</Avatar.Fallback>
+            </Avatar>
+          </td>
           <td class="text-left">{row.nickname}</td>
           <td class="text-left">{row.email}</td>
           <td class="text-left">{row.firstName}</td>
           <td class="text-left">{row.lastName}</td>
           <td class="text-right">
             <div class="flex flex-row justify-end">
-              <button
-                class="btn-icon"
-                onclick={() =>
-                  openEditAuthorModal(
-                    row.id,
-                    row.email,
-                    row.nickname,
-                    row.firstName ?? '',
-                    row.lastName ?? '',
-                    row.image,
-                  )}><Pencil /></button
+              {@render authorForm(
+                row.id,
+                row.nickname,
+                row.firstName ?? '',
+                row.lastName ?? '',
+                row.image,
+                row.email,
+              )}
+              <DialogModal
+                title={m.deleteAuthor()}
+                onAccept={() => deleteAuthor(row.id)}
+                triggerClass="btn-icon"
               >
-              <button
-                class="btn-icon"
-                onclick={() => {
-                  selected_id = row.id;
-                  selected_author = row.nickname;
-                  dialogOpen = true;
-                  dialog?.showModal();
-                }}><Trash /></button
-              >
+                {#snippet trigger()}
+                  <button class="btn-icon">
+                    <Trash />
+                  </button>
+                {/snippet}
+                {#snippet content()}
+                  <p>{m.deletePrompt({ parameter: row.nickname })}</p>
+                {/snippet}
+              </DialogModal>
             </div>
           </td>
         </tr>
@@ -147,33 +196,3 @@
     </tbody>
   </table>
 </AdministrationCard>
-
-<AuthorFormModal
-  title={m.createAuthor()}
-  action="?/create"
-  callback={async () => (createModalOpen = false)}
-  successMessage={m.authorCreationSuccessful()}
-  bind:modalOpen={createModalOpen}
-  bind:nickname={formNickname}
-  bind:email={formEmail}
-  bind:firstName={formFirstName}
-  bind:lastName={formLastName}
-  bind:image={formImage}
-  bind:id={formId}
-  bind:imageFile={formImageFile}
-/>
-
-<AuthorFormModal
-  title={m.editAuthor()}
-  action="?/edit"
-  callback={async () => (editModalOpen = false)}
-  successMessage={m.successfulModification()}
-  bind:modalOpen={editModalOpen}
-  bind:nickname={formNickname}
-  bind:email={formEmail}
-  bind:firstName={formFirstName}
-  bind:lastName={formLastName}
-  bind:image={formImage}
-  bind:id={formId}
-  bind:imageFile={formImageFile}
-/>

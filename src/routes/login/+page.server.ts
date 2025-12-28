@@ -24,12 +24,10 @@ export const actions: Actions = {
       .where(eq(table.users.username, username.toString()));
 
     const user = results.at(0);
-    if (!user) {
-      return fail(401, { message: m.incorrectUsernameOrPassword() });
-    }
-
-    const validPassword = await verify(user.password, password.toString(), argonOptions);
-    if (!validPassword) {
+    const validPassword = user
+      ? await verify(user.password, password.toString(), argonOptions)
+      : null;
+    if (!user || !validPassword) {
       return fail(401, { message: m.incorrectUsernameOrPassword() });
     }
 

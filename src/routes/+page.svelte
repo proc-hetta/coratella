@@ -4,14 +4,11 @@
   import { Avatar } from '@skeletonlabs/skeleton-svelte';
 
   let { data } = $props();
-  let posts = $state(
+  let posts = $derived(
     data.posts
       .filter((p) => !p.draft)
       .toSorted((p1, p2) => p2.ctime!.getTime() - p1.ctime!.getTime()),
   );
-
-  const minId = posts[0]?.id;
-  const maxId = posts.at(-1)?.id;
 </script>
 
 <div>
@@ -51,11 +48,16 @@
                 <div class="items-top mt-2 flex flex-wrap justify-start gap-4">
                   {#each post.authors as author}
                     <div class="card preset-filled-surface-400-600 flex items-center gap-2 p-1.25">
-                      <Avatar
-                        size="size-8"
-                        src={author.image ?? undefined}
-                        name="{author.firstName} {author.lastName}"
-                      />
+                      <Avatar class="size-8">
+                        <Avatar.Image src={author.image ?? undefined} alt="base" />
+                        <Avatar.Fallback
+                          >{author.firstName?.[0]} {author.lastName?.[0]}</Avatar.Fallback
+                        >
+                      </Avatar>
+                      <p>
+                        name="{author.firstName}
+                        {author.lastName}"
+                      </p>
                       <div class="max-w-30 overflow-x-scroll md:max-w-fit md:overflow-x-hidden">
                         {author.nickname}
                       </div>

@@ -2,32 +2,15 @@
   import { goto, invalidateAll } from '$app/navigation';
   import { toaster, toasterOptions } from '$lib/toaster';
   import { m } from '$lib/paraglide/messages';
-  import { Trash, Pencil } from '@lucide/svelte';
+  import { Trash, Pencil, Plus } from '@lucide/svelte';
   import AdministrationCard from '$lib/components/AdministrationCard.svelte';
-  import UserFormModal from '$lib/components/UserFormModal.svelte';
   import DialogModal from '$lib/components/DialogModal.svelte';
+  import { coratellaFormCallback } from '$lib/utils';
+  import { enhance } from '$app/forms';
 
   let { data } = $props();
-  let users = $state(data.users);
-  let user = $state(data.user);
-
-  // https://www.reddit.com/r/sveltejs/comments/1gx65ho/proper_page_data_and_reactivity_pattern_in_svelte/
-  $effect(() => {
-    users = data.users;
-    user = data.user;
-  });
-
-  let createModalOpen = $state(false);
-  let editModalOpen = $state(false);
-
-  let formUsername: string = $state('');
-  let formPassword: string = $state('');
-  let formId: string = $state('');
-
-  let selected_user = $state('');
-  let selected_username = $state('');
-  let dialog: HTMLDialogElement | undefined = $state();
-  let dialogOpen = $state(false);
+  let users = $derived(data.users);
+  let user = $derived(data.user);
 
   async function deleteUser(id: string) {
     const response = await fetch(`/admin/users/${id}`, {
@@ -48,34 +31,57 @@
         ...toasterOptions,
       });
     }
-    dialogOpen = false;
-  }
-
-  function openCreateUserModal() {
-    formUsername = '';
-    formPassword = '';
-    formId = '';
-    createModalOpen = true;
-  }
-
-  function openEditUserModal(id: string, username: string) {
-    formUsername = username;
-    formPassword = '';
-    formId = id;
-    editModalOpen = true;
   }
 </script>
 
-<DialogModal
-  title={m.deleteUser()}
-  {dialog}
-  prompt={m.deletePrompt({ parameter: selected_username })}
-  onAccept={() => deleteUser(selected_user)}
-  onClose={() => (dialogOpen = false)}
-  {dialogOpen}
-></DialogModal>
+{#snippet userForm(userId: string | null, username: string)}
+  <DialogModal
+    title={userId === null ? m.createUser() : m.editUser()}
+    onAccept={async () => {
+      const form = document.getElementById(
+        `user-form-${userId === null ? 'new' : userId}`,
+      ) as HTMLFormElement;
+      form.requestSubmit();
+    }}
+    triggerClass="btn-icon {userId === null ? 'w-min self-end' : ''}"
+  >
+    {#snippet trigger()}
+      <Plus class={userId !== null ? 'hidden' : ''} />
+      <Pencil class={userId === null ? 'hidden' : ''} />
+    {/snippet}
+    {#snippet content()}
+      <form
+        id="user-form-{userId === null ? 'new' : userId}"
+        method="POST"
+        action={userId === null ? '?/create' : '?/edit'}
+        class="flex flex-col items-center justify-center gap-2"
+        use:enhance={coratellaFormCallback({
+          successMessage: userId === null ? m.userCreationSuccessful() : m.successfulModification(),
+          invalidateAll: true,
+          callback: async () => {},
+          preHook: () => {},
+        })}
+      >
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <label class="label max-w-md">
+            <span class="label-text text-left">{m.username()}</span>
+            <input class="input" type="text" value={username} name="username" />
+          </label>
+          <label class="label max-w-md">
+            <span class="label-text text-left">{m.newPassword()}</span>
+            <input class="input" type="password" value="" placeholder="*********" name="password" />
+          </label>
+        </div>
+        <input type="hidden" name="id" value={userId} />
+      </form>
+    {/snippet}
+  </DialogModal>
+{/snippet}
 
-<AdministrationCard title={m.users()} addButtonAction={openCreateUserModal}>
+<AdministrationCard title={m.users()}>
+  {#snippet addElement()}
+    {@render userForm(null, '')}
+  {/snippet}
   <table class="table whitespace-nowrap">
     <thead>
       <tr>
@@ -91,23 +97,23 @@
           <td class="text-left">{row.username}</td>
           <td class="text-right">
             <div class="flex flex-row justify-end">
-              <button
-                class="btn-icon"
-                onclick={() =>
-                  row.id === user.id
-                    ? goto('/admin/profile')
-                    : openEditUserModal(row.id, row.username)}><Pencil /></button
+              {#if row.id === user.id}
+                <button class="btn-icon" onclick={() => goto('/admin/profile')}><Pencil /></button>
+              {:else}
+                {@render userForm(row.id, row.username)}
+              {/if}
+              <DialogModal
+                title={m.deleteUser()}
+                onAccept={() => deleteUser(row.id)}
+                triggerClass="btn-icon"
               >
-              <button
-                class="btn-icon"
-                onclick={() => {
-                  selected_user = row.id;
-                  selected_username = row.username;
-                  dialogOpen = true;
-                  dialog?.showModal();
-                }}
-                disabled={row.id === user.id}><Trash /></button
-              >
+                {#snippet trigger()}
+                  <Trash />
+                {/snippet}
+                {#snippet content()}
+                  <p>{m.deletePrompt({ parameter: row.username })}</p>
+                {/snippet}
+              </DialogModal>
             </div>
           </td>
         </tr>
@@ -116,7 +122,7 @@
   </table>
 </AdministrationCard>
 
-<UserFormModal
+<!-- <UserFormModal
   title={m.createUser()}
   action="?/create"
   callback={async () => (createModalOpen = false)}
@@ -137,3 +143,4 @@
   bind:password={formPassword}
   bind:id={formId}
 />
+-->

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { m } from '$lib/paraglide/messages';
   let { data } = $props();
-  const pageContents = [
+  const pageContents = $derived([
     {
       title: m.posts(),
       data: data.postsCount,
@@ -26,7 +26,7 @@
       title: m.visitors(),
       data: data.totalVisits,
     },
-  ];
+  ]);
 </script>
 
 <div class="flex h-full flex-col items-center justify-center gap-15">

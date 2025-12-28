@@ -1,11 +1,20 @@
 <script lang="ts">
   import '../app.css';
-  import { Toaster } from '@skeletonlabs/skeleton-svelte';
+  import { Toast } from '@skeletonlabs/skeleton-svelte';
   import { toaster } from '$lib/toaster';
 
   let { children } = $props();
 </script>
 
-<Toaster {toaster}></Toaster>
+<Toast.Group {toaster}>
+  {#snippet children(toast)}
+    <Toast {toast}>
+      <Toast.Message>
+        <Toast.Title>{toast.title}</Toast.Title>
+        <Toast.Description>{toast.description}</Toast.Description>
+      </Toast.Message>
+    </Toast>
+  {/snippet}
+</Toast.Group>
 
 {@render children()}

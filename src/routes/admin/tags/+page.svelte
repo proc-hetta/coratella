@@ -2,26 +2,15 @@
   import { toaster, toasterOptions } from '$lib/toaster.js';
   import { m } from '$lib/paraglide/messages';
   import { invalidateAll } from '$app/navigation';
-  import { Trash, Pencil } from '@lucide/svelte';
+  import { Trash, Pencil, Plus } from '@lucide/svelte';
 
-  import NameFormModal from '$lib/components/NameFormModal.svelte';
   import AdministrationCard from '$lib/components/AdministrationCard.svelte';
   import DialogModal from '$lib/components/DialogModal.svelte';
+  import { coratellaFormCallback } from '$lib/utils.js';
+  import { enhance } from '$app/forms';
 
   let { data } = $props();
-  let tags = $state(data.tags);
-  let selected_id = $state(NaN);
-  let selected_tag = $state('');
-  let dialog: HTMLDialogElement | undefined = $state();
-  let dialogOpen = $state(false);
-
-  // https://www.reddit.com/r/sveltejs/comments/1gx65ho/proper_page_data_and_reactivity_pattern_in_svelte/
-  $effect(() => {
-    tags = data.tags;
-  });
-
-  let createModalOpen = $state(false);
-  let editModalOpen = $state(false);
+  let tags = $derived(data.tags);
 
   let formName: string = $state('');
   let formId: number | null = $state(null);
@@ -45,32 +34,55 @@
         ...toasterOptions,
       });
     }
-    dialogOpen = false;
-  }
-
-  function openCreateTagModal() {
-    formName = '';
-    formId = null;
-    createModalOpen = true;
-  }
-
-  function openEditTagModal(id: number, name: string) {
-    formName = name;
-    formId = id;
-    editModalOpen = true;
   }
 </script>
 
-<DialogModal
-  title={m.deleteTag()}
-  {dialog}
-  prompt={m.deletePrompt({ parameter: selected_tag })}
-  onAccept={() => deleteTag(selected_id)}
-  onClose={() => (dialogOpen = false)}
-  {dialogOpen}
-></DialogModal>
+{#snippet tagForm(tagId: number, name: string)}
+  <DialogModal
+    title={Number.isNaN(tagId) ? m.createTag() : m.editTag()}
+    onAccept={async () => {
+      const form = document.getElementById(
+        `tag-form-${Number.isNaN(tagId) ? 'new' : tagId}`,
+      ) as HTMLFormElement;
+      form.requestSubmit();
+    }}
+    triggerClass="btn-icon {Number.isNaN(tagId) ? 'w-min self-end' : ''}"
+  >
+    {#snippet trigger()}
+      <Plus class={!Number.isNaN(tagId) ? 'hidden' : ''} />
+      <Pencil class={Number.isNaN(tagId) ? 'hidden' : ''} />
+    {/snippet}
+    {#snippet content()}
+      <form
+        id="tag-form-{Number.isNaN(tagId) ? 'new' : tagId}"
+        method="POST"
+        action={Number.isNaN(tagId) ? '?/create' : '?/edit'}
+        class="flex flex-col items-center justify-center gap-2"
+        use:enhance={coratellaFormCallback({
+          successMessage: Number.isNaN(tagId)
+            ? m.tagCreationSuccessful()
+            : m.successfulModification(),
+          invalidateAll: true,
+          callback: async () => {},
+          preHook: () => {},
+        })}
+      >
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <label class="label max-w-md">
+            <span class="label-text text-left">{m.name()}</span>
+            <input class="input" type="text" value={name} name="name" />
+          </label>
+        </div>
+        <input type="hidden" name="id" value={tagId} />
+      </form>
+    {/snippet}
+  </DialogModal>
+{/snippet}
 
-<AdministrationCard title={m.tags()} addButtonAction={openCreateTagModal}>
+<AdministrationCard title={m.tags()}>
+  {#snippet addElement()}
+    {@render tagForm(NaN, '')}
+  {/snippet}
   <table class="table whitespace-nowrap">
     <thead>
       <tr>
@@ -86,18 +98,19 @@
           <td class="text-left">{row.name}</td>
           <td class="text-right">
             <div class="flex flex-row justify-end">
-              <button class="btn-icon" onclick={() => openEditTagModal(row.id, row.name)}
-                ><Pencil /></button
+              {@render tagForm(row.id, row.name)}
+              <DialogModal
+                title={m.deleteTag()}
+                onAccept={() => deleteTag(row.id)}
+                triggerClass="btn-icon"
               >
-              <button
-                class="btn-icon"
-                onclick={() => {
-                  selected_id = row.id;
-                  selected_tag = row.name;
-                  dialogOpen = true;
-                  dialog?.showModal();
-                }}><Trash /></button
-              >
+                {#snippet trigger()}
+                  <Trash />
+                {/snippet}
+                {#snippet content()}
+                  <p>{m.deletePrompt({ parameter: row.name })}</p>
+                {/snippet}
+              </DialogModal>
             </div>
           </td>
         </tr>
@@ -105,23 +118,3 @@
     </tbody>
   </table>
 </AdministrationCard>
-
-<NameFormModal
-  title={m.createTag()}
-  action="?/create"
-  callback={async () => (createModalOpen = false)}
-  successMessage={m.tagCreationSuccessful()}
-  bind:modalOpen={createModalOpen}
-  bind:name={formName}
-  bind:id={formId}
-/>
-
-<NameFormModal
-  title={m.editTag()}
-  action="?/edit"
-  callback={async () => (editModalOpen = false)}
-  successMessage={m.successfulModification()}
-  bind:modalOpen={editModalOpen}
-  bind:name={formName}
-  bind:id={formId}
-/>

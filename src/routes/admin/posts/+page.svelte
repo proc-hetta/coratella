@@ -2,21 +2,12 @@
   import { toaster, toasterOptions } from '$lib/toaster.js';
   import { m } from '$lib/paraglide/messages.js';
   import { goto, invalidateAll } from '$app/navigation';
-  import { Trash, Pencil, Check } from '@lucide/svelte';
+  import { Trash, Pencil, Check, Plus } from '@lucide/svelte';
   import AdministrationCard from '$lib/components/AdministrationCard.svelte';
   import DialogModal from '$lib/components/DialogModal.svelte';
 
   let { data } = $props();
-  let posts = $state(data.posts);
-  let selected_id = $state(NaN);
-  let selected_title = $state('');
-  let dialog: HTMLDialogElement | undefined = $state();
-  let dialogOpen = $state(false);
-
-  // https://www.reddit.com/r/sveltejs/comments/1gx65ho/proper_page_data_and_reactivity_pattern_in_svelte/
-  $effect(() => {
-    posts = data.posts;
-  });
+  let posts = $derived(data.posts);
 
   function createNewPost() {
     goto(`/admin/posts/new`);
@@ -44,20 +35,15 @@
         ...toasterOptions,
       });
     }
-    dialogOpen = false;
   }
 </script>
 
-<DialogModal
-  title={m.deletePost()}
-  {dialog}
-  prompt={m.deletePrompt({ parameter: selected_title })}
-  onAccept={() => deletePost(selected_id)}
-  onClose={() => (dialogOpen = false)}
-  {dialogOpen}
-></DialogModal>
-
-<AdministrationCard title={m.posts()} addButtonAction={createNewPost}>
+<AdministrationCard title={m.posts()}>
+  {#snippet addElement()}
+    <button class="btn-icon w-min self-end" onclick={createNewPost}>
+      <Plus />
+    </button>
+  {/snippet}
   <table class="table whitespace-nowrap">
     <thead>
       <tr>
@@ -102,17 +88,18 @@
               <button class="btn-icon" onclick={() => editPost(post.id)}>
                 <Pencil />
               </button>
-              <button
-                class="btn-icon"
-                onclick={() => {
-                  selected_id = post.id;
-                  selected_title = post.title;
-                  dialogOpen = true;
-                  dialog?.showModal();
-                }}
+              <DialogModal
+                title={m.deletePost()}
+                onAccept="{() => deletePost(post.id)},"
+                triggerClass="btn-icon"
               >
-                <Trash />
-              </button>
+                {#snippet trigger()}
+                  <Trash />
+                {/snippet}
+                {#snippet content()}
+                  <p>{m.deletePrompt({ parameter: post.title })}</p>
+                {/snippet}
+              </DialogModal>
             </div>
           </td>
         </tr>
