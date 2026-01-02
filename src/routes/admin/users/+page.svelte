@@ -106,6 +106,7 @@
                 title={m.deleteUser()}
                 onAccept={() => deleteUser(row.id)}
                 triggerClass="btn-icon"
+                triggerDisabled={row.id == user.id}
               >
                 {#snippet trigger()}
                   <Trash />
