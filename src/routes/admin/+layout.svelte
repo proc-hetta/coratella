@@ -3,6 +3,7 @@
   import { Tag, Book, User, LogOut, BookHeart, ChartColumnStacked } from '@lucide/svelte';
   import { m } from '$lib/paraglide/messages';
   import Logo from '$lib/images/logo.svg';
+  import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
 
   let { children, data } = $props();
   let sections = $derived([
@@ -32,6 +33,7 @@
             </div>
           </AppBar.Lead>
           <AppBar.Trail>
+            <ThemeSwitcher themes={data.themes} variants={data.themeVariants}></ThemeSwitcher>
             <a href="/admin/profile" class="btn preset-tonal-surface-900">{data.user.username}</a>
             <div class="flex items-center">
               <a href="/logout" class="btn-icon">

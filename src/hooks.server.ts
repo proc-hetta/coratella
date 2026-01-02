@@ -2,6 +2,7 @@ import * as auth from '$lib/server/auth.js';
 import { sequence } from '@sveltejs/kit/hooks';
 import { redirect, type Handle } from '@sveltejs/kit';
 import { paraglideMiddleware } from '$lib/paraglide/server';
+import { defaultTheme } from '$lib/themes';
 
 const handleParaglide: Handle = ({ event, resolve }) =>
   paraglideMiddleware(event.request, ({ request, locale }) => {
@@ -36,4 +37,11 @@ const handleAuth: Handle = async ({ event, resolve }) => {
   }
 };
 
-export const handle: Handle = sequence(handleParaglide, handleAuth);
+const handleTheme: Handle = ({ event, resolve }) => {
+  return resolve(event, {
+    transformPageChunk: ({ html }) =>
+      html.replace('%theme%', event.cookies.get('theme') ?? defaultTheme),
+  });
+};
+
+export const handle: Handle = sequence(handleParaglide, handleAuth, handleTheme);

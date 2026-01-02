@@ -1,4 +1,5 @@
 import type { User } from '$lib/server/db/schema';
+import { themes, themeVariants } from '$lib/themes';
 import type { PageServerLoad } from '../login/$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -13,5 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   return {
     user: reducedUser,
+    themes,
+    themeVariants,
   };
 };

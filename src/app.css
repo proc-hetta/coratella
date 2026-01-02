@@ -6,6 +6,9 @@
 @import '@skeletonlabs/skeleton/themes/wintry';
 @import '@skeletonlabs/skeleton/themes/reign';
 @import '@skeletonlabs/skeleton/themes/mint';
+@import '@skeletonlabs/skeleton/themes/rose';
+@import '@skeletonlabs/skeleton/themes/pine';
+@import '@skeletonlabs/skeleton/themes/cerberus';
 
 @import '../node_modules/highlight.js/styles/github-dark.css';
 

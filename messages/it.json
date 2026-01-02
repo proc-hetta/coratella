@@ -50,6 +50,7 @@
   "posts": "Post",
   "tags": "Tag",
   "name": "Name",
+  "themes": "Temi",
   "categoryDeleted": "Categoria eliminata",
   "createCategory": "Crea categoria",
   "categoryCreationSuccessful": "Categoria creata con successo",
