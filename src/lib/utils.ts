@@ -75,3 +75,12 @@ export async function torcoloUpload(file: File) {
   }
   return `${torcoloUrl}${response.headers.get('Location')}`;
 }
+
+export function capitalize(str: String) {
+  return str
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .map((word: String) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
