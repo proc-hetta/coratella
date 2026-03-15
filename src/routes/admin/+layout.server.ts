@@ -1,6 +1,7 @@
 import type { User } from '$lib/server/db/schema';
 import { themes, modes } from '$lib/themes';
 import type { PageServerLoad } from '../login/$types';
+import * as env from '$lib/info';
 
 export const load: PageServerLoad = async ({ locals }) => {
   const user: User = locals.user;
@@ -15,6 +16,8 @@ export const load: PageServerLoad = async ({ locals }) => {
   return {
     user: reducedUser,
     themes,
-    themeVariants,
+    modes,
+    title: env.title,
+    logo: env.logo,
   };
 };

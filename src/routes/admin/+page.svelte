@@ -30,7 +30,7 @@
 </script>
 
 <div class="flex h-full flex-col items-center justify-center gap-15">
-  <h1 class="h1 text-center">{m.dashboardTitle()}</h1>
+  <h1 class="h1 text-center">{m.dashboardTitle({ title: data.title ?? 'Coratella' })}</h1>
   <div class="flex flex-wrap items-center justify-center gap-10">
     {#each pageContents as content}
       <div class="flex flex-col gap-4">

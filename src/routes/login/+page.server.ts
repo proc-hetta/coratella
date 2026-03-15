@@ -5,8 +5,16 @@ import * as auth from '$lib/server/auth';
 import { m } from '$lib/paraglide/messages';
 import * as table from '$lib/server/db/schema';
 import { argonOptions } from '$lib/server/db/utils';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
+import * as env from '$lib/info';
+
+export const load: PageServerLoad = async () => {
+  return {
+    title: env.title,
+    logo: env.logo,
+  };
+};
 
 export const actions: Actions = {
   default: async (event) => {

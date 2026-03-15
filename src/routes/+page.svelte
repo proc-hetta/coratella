@@ -1,6 +1,5 @@
 <script lang="ts">
   import CategoryBadge from '$lib/components/CategoryBadge.svelte';
-  import Logo from '$lib/images/logo.svg';
   import { Avatar } from '@skeletonlabs/skeleton-svelte';
 
   let { data } = $props();
@@ -14,9 +13,9 @@
 <div>
   <div>
     <a class="flex w-full items-center justify-center" href="/">
-      <img class="" src={Logo} alt="logo" />
+      <img class="" src={data.logo} alt="logo" />
     </a>
-    <h1 class="h1 mb-10 text-center">/proc/hetta</h1>
+    <h1 class="h1 mb-10 text-center">{data.title}</h1>
   </div>
 </div>
 

@@ -2,6 +2,7 @@ import { rowsCount } from '$lib/server/db/utils';
 import { totalVisits } from '$lib/server/db/posts';
 import type { PageServerLoad } from './$types';
 import { tags, posts, users, authors, categories } from '$lib/server/db/schema';
+import * as env from '$lib/info';
 
 export const load: PageServerLoad = async () => {
   return {
@@ -12,5 +13,7 @@ export const load: PageServerLoad = async () => {
     authorsCount: await rowsCount(authors),
     categoriesCount: await rowsCount(categories),
     totalVisits: await totalVisits(),
+    title: env.title,
+    logo: env.logo,
   };
 };

@@ -4,12 +4,14 @@
   import { coratellaFormCallback } from '$lib/utils';
   import { Progress } from '@skeletonlabs/skeleton-svelte';
 
+  const { data } = $props();
+
   let running = false;
 </script>
 
 <div class="mt-32 flex items-center justify-center">
   <div class="card md:preset-filled-surface-100-900 w-full max-w-md p-4 text-center">
-    <h4 class="h4">{m.loginTitle()}</h4>
+    <h4 class="h4">{m.loginTitle({ title: data.title ?? 'Coratella' })}</h4>
     <form
       class="mt-8 flex flex-col items-center justify-center gap-2"
       method="POST"

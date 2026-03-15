@@ -37,6 +37,12 @@ const handleAuth: Handle = async ({ event, resolve }) => {
   }
 };
 
+const handleTitle: Handle = ({ event, resolve }) => {
+  return resolve(event, {
+    transformPageChunk: ({ html }) => html.replace('%title%', process.env.TITLE ?? 'Coratella'),
+  });
+};
+
 const handleTheme: Handle = ({ event, resolve }) => {
   return resolve(event, {
     transformPageChunk: ({ html }) =>

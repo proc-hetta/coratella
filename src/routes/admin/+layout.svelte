@@ -2,7 +2,6 @@
   import { AppBar, Navigation } from '@skeletonlabs/skeleton-svelte';
   import { Tag, Book, User, LogOut, BookHeart, ChartColumnStacked } from '@lucide/svelte';
   import { m } from '$lib/paraglide/messages';
-  import Logo from '$lib/images/logo.svg';
   import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
   import { getTheme, setTheme, getMode, setMode } from '$lib/themes.js';
 
@@ -24,7 +23,7 @@
           <AppBar.Lead>
             <div class="flex flex-row gap-4">
               <a class="flex items-center" href="/admin#">
-                <img class="h-10" src={Logo} alt="logo" />
+                <img class="h-10" src={data.logo} alt="logo" />
               </a>
               <div class="hidden md:block">
                 {#each sections as section}
