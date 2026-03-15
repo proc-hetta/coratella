@@ -58,6 +58,11 @@ export async function torcoloUpload(file: File) {
 
   let formData = new FormData();
   formData.append('file', file);
+
+  if (process.env.TORCOLO_URL === undefined && process.env.TORCOLO_TOKEN === undefined) {
+    return '';
+  }
+
   const response = await fetch(`${torcoloUrl}/files`, {
     method: 'POST',
     body: formData,

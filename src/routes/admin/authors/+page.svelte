@@ -59,6 +59,14 @@
           body: formData,
           credentials: 'include',
         });
+        if (response.status == 401) {
+          toaster.error({
+            title: m.error(),
+            description: m.errorNoTorcoloAuth(),
+            ...toasterOptions,
+          });
+          return;
+        }
         if (!response.ok) {
           toaster.error({
             title: m.error(),
