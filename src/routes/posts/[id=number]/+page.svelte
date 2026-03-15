@@ -7,7 +7,7 @@
 
   let { data } = $props();
   let post = $derived(data.post);
-  let { marked, remark } = $derived(getMarkdownProcessors(post.math, post.toc));
+  let { preprocess, marked, remark, rehype } = $derived(getMarkdownProcessors(post.math, post.toc));
 </script>
 
 <div class="grid h-full grid-cols-[1fr_minmax(0,_auto)_1fr] grid-rows-[auto_1fr] text-left">
@@ -34,7 +34,7 @@
       {/each}
     </div>
     <div class="mt-5">
-      {#await marked.parse(String(remark.processSync(post.content)))}
+      {#await marked.parse(String(remark.processSync(preprocess(post.content))))}
         <Progress value={null}>
           <Progress.Circle>
             <Progress.CircleTrack />
@@ -42,9 +42,18 @@
           </Progress.Circle>
         </Progress>
       {:then processed}
-        <div class="prose prose-neutral prose-invert max-w-none">
-          {@html DOMPurify.sanitize(processed)}
-        </div>
+        {#await String(rehype.processSync(processed))}
+          <Progress value={null}>
+            <Progress.Circle>
+              <Progress.CircleTrack />
+              <Progress.CircleRange />
+            </Progress.Circle>
+          </Progress>
+        {:then renderedHtml}
+          <div class="prose prose-neutral prose-invert max-w-none">
+            {@html DOMPurify.sanitize(renderedHtml)}
+          </div>
+        {/await}
       {/await}
     </div>
     <footer class="mt-15 border-t-1">

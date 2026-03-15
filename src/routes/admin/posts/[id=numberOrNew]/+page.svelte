@@ -235,11 +235,11 @@
     >
     <Tabs.Content value="preview">
       {#if browser}
-        {#await marked.parse(String(remark.processSync(post.content)))}
+        {#await rehype.processSync(String(marked.parse(String(remark.processSync(preprocess(post.content))))))}
           <Progress value={null} />
         {:then processed}
           <div class="prose prose-neutral prose-invert max-w-none">
-            {@html DOMPurify.sanitize(processed)}
+            {@html DOMPurify.sanitize(String(processed))}
           </div>
         {:catch e}
           <h1 class="h1">{m.error()}</h1>
