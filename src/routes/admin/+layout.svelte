@@ -18,14 +18,14 @@
 <div class="grid min-h-screen grid-rows-[1fr_auto]">
   <div class="grid h-full grid-cols-[1fr_minmax(0,_auto)_1fr] grid-rows-[auto_1fr]">
     <header class="sticky top-0 z-10 col-span-full">
-      <AppBar class="md:bg-surface-900 bg-transparent">
+      <AppBar class="max-lg:bg-transparent">
         <AppBar.Toolbar class="grid-cols-[auto_auto]">
           <AppBar.Lead>
             <div class="flex flex-row gap-4">
               <a class="flex items-center" href="/admin#">
                 <img class="h-10" src={data.logo} alt="logo" />
               </a>
-              <div class="hidden md:block">
+              <div class="max-lg:hidden">
                 {#each sections as section}
                   <a class="btn hover:preset-tonal" href={section.href}>{section.title}</a>
                 {/each}
@@ -52,12 +52,12 @@
     </main>
   </div>
 
-  <div class="sticky bottom-0 md:hidden">
+  <div class="sticky bottom-0 lg:hidden">
     <Navigation layout="bar">
-      <Navigation.Menu class="grid grid-cols-{sections.length} gap-2">
+      <Navigation.Menu>
         {#each sections as section}
           {@const Icon = section.icon}
-          <Navigation.TriggerAnchor href={section.href}>
+          <Navigation.TriggerAnchor class="flex-auto" href={section.href}>
             <Icon class="size-5" />
             <Navigation.TriggerText>{section.title}</Navigation.TriggerText>
           </Navigation.TriggerAnchor>

@@ -20,8 +20,8 @@
     {:else}
       <Contrast></Contrast>
     {/if}
-    {capitalize(selectedTheme)}</Popover.Trigger
-  >
+    <div class="max-sm:hidden">{capitalize(selectedTheme)}</div>
+  </Popover.Trigger>
   <Portal>
     <Popover.Positioner>
       <Popover.Content class="card bg-surface-100-900 w-96 p-4 shadow-xl">
