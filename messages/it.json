@@ -18,7 +18,7 @@
   "A": "Opacità",
   "insertBothUsernameAndPassword": "Inserire username e password",
   "incorrectUsernameOrPassword": "Username o password non corretti",
-  "errorNoTorcoloAuth": "Errore: non sono state definite le credenziali per Torcolo",
+  "errorNoTorcoloAuth": "Errore: credenziali per torcolo non definite o non valide",
   "successTorcoloUpload": "Caricamento completato con successo",
   "users": "Utenti",
   "newPassword": "Nuova password",

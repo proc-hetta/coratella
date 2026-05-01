@@ -71,7 +71,7 @@
   "draft": "Draft",
   "postSaved": "Post saved",
   "errorWhileSaving": "Error while saving",
-  "errorNoTorcoloAuth": "Error: no Torcolo credentials defined",
+  "errorNoTorcoloAuth": "Error: Torcolo credentials are either invalid or not provided",
   "successTorcoloUpload": "Data successfully uploaded",
   "placeholderName": "Insert name...",
   "email": "Email",
