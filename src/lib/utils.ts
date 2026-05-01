@@ -59,7 +59,7 @@ export async function torcoloUpload(file: File) {
   let formData = new FormData();
   formData.append('file', file);
 
-  if (process.env.TORCOLO_URL === undefined && process.env.TORCOLO_TOKEN === undefined) {
+  if (process.env.TORCOLO_URL === undefined || process.env.TORCOLO_TOKEN === undefined) {
     return '';
   }
 
