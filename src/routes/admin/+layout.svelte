@@ -1,9 +1,16 @@
 <script lang="ts">
-  import { AppBar, Navigation } from '@skeletonlabs/skeleton-svelte';
-  import { Tag, Book, User, LogOut, BookHeart, ChartColumnStacked } from '@lucide/svelte';
+  import { AppBar, Navigation, Popover, Portal } from '@skeletonlabs/skeleton-svelte';
+  import {
+    Tag,
+    Book,
+    User,
+    LogOut,
+    BookHeart,
+    ChartColumnStacked,
+    Paintbrush,
+  } from '@lucide/svelte';
   import { m } from '$lib/paraglide/messages';
   import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
-  import { getTheme, setTheme, getMode, setMode } from '$lib/themes.js';
 
   let { children, data } = $props();
   let sections = $derived([
@@ -33,10 +40,18 @@
             </div>
           </AppBar.Lead>
           <AppBar.Trail>
-            <ThemeSwitcher themes={data.modes} getCallback={getMode} setCallback={setMode}
-            ></ThemeSwitcher>
-            <ThemeSwitcher themes={data.themes} getCallback={getTheme} setCallback={setTheme}
-            ></ThemeSwitcher>
+            <Popover>
+              <Popover.Trigger class="btn">
+                <Paintbrush></Paintbrush>
+              </Popover.Trigger>
+              <Portal>
+                <Popover.Positioner>
+                  <Popover.Content class="card bg-surface-100-900 w-96 p-4 shadow-xl">
+                    <ThemeSwitcher></ThemeSwitcher>
+                  </Popover.Content>
+                </Popover.Positioner>
+              </Portal>
+            </Popover>
             <a href="/admin/profile" class="btn preset-tonal-surface-900">{data.user.username}</a>
             <div class="flex items-center">
               <a href="/logout" class="btn-icon">

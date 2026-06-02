@@ -13,13 +13,13 @@
 <div>
   <div>
     <a class="flex w-full items-center justify-center" href="/">
-      <img class="" src={data.logo} alt="logo" />
+      <img class="" src={data.logo} alt="Coratella Logo" />
     </a>
     <h1 class="h1 mb-10 text-center">{data.title}</h1>
   </div>
 </div>
 
-<div class="m-10 flex flex-col gap-0 p-5">
+<div class="flex flex-col gap-0 p-5 md:m-10">
   <h2 class="h2 mb-5 text-center">Posts</h2>
   <div class="flex flex-col justify-center gap-5">
     {#each posts as post (post.id)}
@@ -28,7 +28,7 @@
           <div class="w-full py-4">
             <div class="flex">
               <div class="w-full">
-                <h3 class="h3 w-full">{post.title}</h3>
+                <h3 class="h3 w-full overflow-clip text-ellipsis">{post.title}</h3>
                 <div class="flex flex-col gap-0">
                   <div
                     class="mt-2 mb-2 flex h-min w-fit max-w-3xs flex-wrap justify-end gap-2 md:hidden md:min-w-50"

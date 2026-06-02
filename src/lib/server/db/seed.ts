@@ -7,7 +7,11 @@ import { exit } from 'node:process';
 
 dotenv.config({ path: './.env' });
 
-if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is not set');
+  exit(1);
+}
+
 const client = postgres(process.env.DATABASE_URL);
 export const db = drizzle(client, { schema });
 
