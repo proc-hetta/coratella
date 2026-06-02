@@ -2,7 +2,7 @@ import * as auth from '$lib/server/auth.js';
 import { sequence } from '@sveltejs/kit/hooks';
 import { redirect, type Handle } from '@sveltejs/kit';
 import { paraglideMiddleware } from '$lib/paraglide/server';
-import { defaultMode, defaultTheme } from '$lib/themes';
+import { getMode, getTheme } from '$lib/themes';
 
 const handleParaglide: Handle = ({ event, resolve }) =>
   paraglideMiddleware(event.request, ({ request, locale }) => {
@@ -39,21 +39,22 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 
 const handleTitle: Handle = ({ event, resolve }) => {
   return resolve(event, {
-    transformPageChunk: ({ html }) => html.replace('%title%', process.env.TITLE ?? 'Coratella'),
+    transformPageChunk: ({ html }) =>
+      html.replace('%title%', process.env.PUBLIC_TITLE ?? 'Coratella'),
   });
 };
 
 const handleTheme: Handle = ({ event, resolve }) => {
   return resolve(event, {
     transformPageChunk: ({ html }) =>
-      html.replace('%theme%', event.cookies.get('theme') ?? defaultTheme),
+      html.replace('%theme%', event.cookies.get('theme') ?? getTheme()),
   });
 };
 
 const handleMode: Handle = ({ event, resolve }) => {
   return resolve(event, {
     transformPageChunk: ({ html }) =>
-      html.replace('%mode%', event.cookies.get('mode') ?? defaultMode),
+      html.replace('%mode%', event.cookies.get('mode') ?? getMode()),
   });
 };
 

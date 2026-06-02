@@ -10,7 +10,9 @@
   let { preprocess, marked, remark, rehype } = $derived(getMarkdownProcessors(post.math, post.toc));
 </script>
 
-<div class="grid h-full grid-cols-[1fr_minmax(0,_auto)_1fr] grid-rows-[auto_1fr] text-left">
+<div
+  class="grid h-full grid-cols-[1fr_minmax(0,auto)_1fr] grid-rows-[auto_1fr] text-left break-all"
+>
   <div class="col-span-full w-screen p-4 lg:col-2 lg:max-w-5xl">
     <h2 class="h2 mt-5">
       {post.title}
@@ -56,7 +58,7 @@
         {/await}
       {/await}
     </div>
-    <footer class="mt-15 border-t-1">
+    <footer class="mt-15 border-t">
       <div class="mt-5 flex w-full flex-col gap-2">
         <h4 class="h4">Authors:</h4>
         {#each post.authors as author (author.id)}
