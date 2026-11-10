@@ -1,6 +1,6 @@
 import { getPosts } from '$lib/server/db/posts';
 import type { PageServerLoad } from './$types';
-import * as env from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import { defaultMode, modes, themes } from '$lib/themes';
 
 export const load: PageServerLoad = async ({ cookies }) => {

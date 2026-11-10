@@ -11,6 +11,6 @@ if (!building && !env.DATABASE_URL) {
   console.error('DATABASE_URL is not set');
   exit(1);
 }
-const client = postgres(building ? '' : env.DATABASE_URL);
+const client = postgres(building ? '' : env.DATABASE_URL!);
 export const db = drizzle(client, { schema });
 if (!building) await migrate(db, { migrationsFolder: 'drizzle' });

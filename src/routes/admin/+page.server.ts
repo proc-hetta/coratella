@@ -2,7 +2,7 @@ import { rowsCount } from '$lib/server/db/utils';
 import { totalVisits } from '$lib/server/db/posts';
 import type { PageServerLoad } from './$types';
 import { tags, posts, users, authors, categories } from '$lib/server/db/schema';
-import * as env from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import { getMode } from '$lib/themes';
 
 export const load: PageServerLoad = async () => {

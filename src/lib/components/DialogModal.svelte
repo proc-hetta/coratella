@@ -2,7 +2,15 @@
   import { m } from '$lib/paraglide/messages.js';
   import { Dialog, Progress, Portal } from '@skeletonlabs/skeleton-svelte';
 
-  let { title, content, onAccept, trigger, triggerClass, triggerDisabled = false, onClick = () => {} } = $props();
+  let {
+    title,
+    content,
+    onAccept,
+    trigger,
+    triggerClass,
+    triggerDisabled = false,
+    onClick = () => {},
+  } = $props();
   let running = $state(false);
   const animation =
     'transition transition-discrete opacity-0 translate-y-[100px] starting:data-[state=open]:opacity-0 starting:data-[state=open]:translate-y-[100px] data-[state=open]:opacity-100 data-[state=open]:translate-y-0';

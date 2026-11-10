@@ -1,10 +1,10 @@
 import type { User } from '$lib/server/db/schema';
 import { themes, modes, defaultMode } from '$lib/themes';
-import type { PageServerLoad } from '../login/$types';
-import * as env from '$env/static/public';
+import type { LayoutServerLoad } from './$types';
+import { env } from '$env/dynamic/public';
 
-export const load: PageServerLoad = async ({ locals, cookies }) => {
-  const user: User = locals.user;
+export const load: LayoutServerLoad = async ({ locals, cookies }) => {
+  const user: User = locals.user!;
   const mode = cookies.get('mode') ?? defaultMode;
 
   const reducedUser: {

@@ -44,7 +44,7 @@
     post.categories = [...sourcePost.categories];
     post.authors = [...sourcePost.authors];
   });
-  let { marked, remark } = $derived(getMarkdownProcessors(post.math, post.toc));
+  let { preprocess, marked, remark, rehype } = $derived(getMarkdownProcessors(post.math, post.toc));
 
   let group = $state('editor');
 

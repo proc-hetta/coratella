@@ -7,7 +7,7 @@ import * as table from '$lib/server/db/schema';
 import { argonOptions } from '$lib/server/db/utils';
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import * as env from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import { getMode } from '$lib/themes';
 
 export const load: PageServerLoad = async () => {

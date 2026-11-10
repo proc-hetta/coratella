@@ -6,7 +6,7 @@
 
   const { data } = $props();
 
-  let running = false;
+  let running = $state(false);
 </script>
 
 <div class="mt-32 flex items-center justify-center">
