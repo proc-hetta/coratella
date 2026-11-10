@@ -1,21 +1,21 @@
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { verify } from '@node-rs/argon2';
-import * as auth from '$lib/server/auth';
-import { m } from '$lib/paraglide/messages';
-import * as table from '$lib/server/db/schema';
-import { argonOptions } from '$lib/server/db/utils';
+import * as auth from '#lib/server/auth.ts';
+import { m } from '#lib/paraglide/messages.js';
+import * as table from '#lib/server/db/schema.ts';
+import { argonOptions } from '#lib/server/db/utils.ts';
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { env } from '$env/dynamic/public';
-import { getMode } from '$lib/themes';
+import { PUBLIC_TITLE, PUBLIC_LOGODARK, PUBLIC_LOGOLIGHT, PUBLIC_LOGO } from '$app/env/public';
+import { getMode } from '#lib/themes.ts';
 
 export const load: PageServerLoad = async () => {
   return {
-    title: env.PUBLIC_TITLE,
+    title: PUBLIC_TITLE,
     logo:
-      (getMode() === 'dark' ? env.PUBLIC_LOGODARK : env.PUBLIC_LOGOLIGHT) ??
-      env.PUBLIC_LOGO ??
+      (getMode() === 'dark' ? PUBLIC_LOGODARK : PUBLIC_LOGOLIGHT) ??
+      PUBLIC_LOGO ??
       './src/lib/images/logo.svg',
   };
 };

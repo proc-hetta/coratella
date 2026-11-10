@@ -1,29 +1,18 @@
 <script lang="ts">
-  import { toaster, toasterOptions } from '$lib/toaster.js';
-  import { m } from '$lib/paraglide/messages';
-  import { invalidateAll } from '$app/navigation';
+  import { toaster, toasterOptions } from '#lib/toaster.js';
+  import { m } from '#lib/paraglide/messages.js';
+  import { refreshAll } from '$app/navigation';
   import { Trash, Pencil, Circle, Plus } from '@lucide/svelte';
 
-  import AdministrationCard from '$lib/components/AdministrationCard.svelte';
+  import AdministrationCard from '#lib/components/AdministrationCard.svelte';
 
   import Color from 'color';
-  import type { ColorInstance } from 'color';
-  import type { RGB } from '$lib/server/db/color';
-  import DialogModal from '$lib/components/DialogModal.svelte';
-  import { coratellaFormCallback } from '$lib/utils.js';
+  import DialogModal from '#lib/components/DialogModal.svelte';
+  import { coratellaFormCallback } from '#lib/utils.js';
   import { enhance } from '$app/forms';
 
   let { data } = $props();
   let categories = $derived(data.categories);
-
-  export const rgb = (color: ColorInstance): RGB => {
-    const [r, g, b] = color.toJSON().color;
-    return {
-      r,
-      g,
-      b,
-    };
-  };
 
   async function deleteCategory(id: number) {
     const response = await fetch(`/admin/categories/${id}`, {
@@ -36,7 +25,7 @@
         description: m.categoryDeleted(),
         ...toasterOptions,
       });
-      await invalidateAll();
+      await refreshAll();
     } else {
       toaster.error({
         title: m.error(),
@@ -47,7 +36,7 @@
   }
 </script>
 
-{#snippet categoryForm(categoryId: number, name: string, color: RGB)}
+{#snippet categoryForm(categoryId: number, name: string, color: string)}
   <DialogModal
     title={Number.isNaN(categoryId) ? m.createTag() : m.editTag()}
     onAccept={async () => {
@@ -72,7 +61,7 @@
           successMessage: Number.isNaN(categoryId)
             ? m.tagCreationSuccessful()
             : m.successfulModification(),
-          invalidateAll: true,
+          refreshAll: true,
           callback: async () => {},
           preHook: () => {},
         })}
@@ -84,12 +73,7 @@
           </label>
           <label class="label max-w-md">
             <span class="label-text text-left">{m.color()}</span>
-            <input
-              class="input"
-              type="color"
-              value={Color.rgb(color.r, color.g, color.b).hex()}
-              name="color"
-            />
+            <input class="input" type="color" value={Color(color).hex()} name="color" />
           </label>
         </div>
         <input type="hidden" name="id" value={categoryId} />
@@ -100,7 +84,7 @@
 
 <AdministrationCard title={m.categories()}>
   {#snippet addElement()}
-    {@render categoryForm(NaN, '', rgb(Color('#000000')))}
+    {@render categoryForm(NaN, '', '#000000')}
   {/snippet}
   <table class="table whitespace-nowrap">
     <thead>
@@ -119,7 +103,7 @@
           <td class="text-left">{row.name}</td>
           <td class="text-right">
             <div class="flex flex-row justify-end">
-              {@render categoryForm(row.id, row.name, rgb(Color(row.color ?? '#000000')))}
+              {@render categoryForm(row.id, row.name, row.color ?? '#000000')}
               <DialogModal
                 title={m.deleteCategory()}
                 onAccept={() => deleteCategory(row.id)}

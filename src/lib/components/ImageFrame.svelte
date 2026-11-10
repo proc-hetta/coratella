@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FileUpload } from '@skeletonlabs/skeleton-svelte';
-  import { X, ImagePlus, FileUp } from '@lucide/svelte/icons';
+  import { X, ImagePlus } from '@lucide/svelte/icons';
 
   interface Props {
     readonly src?: string;

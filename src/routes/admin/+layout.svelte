@@ -9,8 +9,8 @@
     ChartColumnStacked,
     Paintbrush,
   } from '@lucide/svelte';
-  import { m } from '$lib/paraglide/messages';
-  import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
+  import { m } from '#lib/paraglide/messages.js';
+  import ThemeSwitcher from '#lib/components/ThemeSwitcher.svelte';
 
   let { children, data } = $props();
   let sections = $derived([

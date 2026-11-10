@@ -2,14 +2,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { isRedirect } from '@sveltejs/kit';
 import * as jose from 'jose';
 import { call, cookieJar, formRequest, thrown } from './helpers';
-import * as auth from '$lib/server/auth';
+import * as auth from '#lib/server/auth.ts';
 import * as loginPage from '../routes/(non-admin)/login/+page.server';
 import * as logout from '../routes/(non-admin)/logout/+server';
 import * as adminLayout from '../routes/admin/+layout.server';
 import * as adminHome from '../routes/admin/+page.server';
 import * as files from '../routes/admin/files/+server';
-import { createUser } from '$lib/server/db/users';
-import { createTag } from '$lib/server/db/tags';
+import { createUser } from '#lib/server/db/users.ts';
+import { createTag } from '#lib/server/db/tags.ts';
 
 describe('session tokens', () => {
   it('generates an HS256 JWT valid for 24h with the user id as subject', async () => {

@@ -1,19 +1,16 @@
 <script lang="ts">
-  import { toaster, toasterOptions } from '$lib/toaster.js';
-  import { m } from '$lib/paraglide/messages';
-  import { invalidateAll } from '$app/navigation';
+  import { toaster, toasterOptions } from '#lib/toaster.js';
+  import { m } from '#lib/paraglide/messages.js';
+  import { refreshAll } from '$app/navigation';
   import { Trash, Pencil, Plus } from '@lucide/svelte';
 
-  import AdministrationCard from '$lib/components/AdministrationCard.svelte';
-  import DialogModal from '$lib/components/DialogModal.svelte';
-  import { coratellaFormCallback } from '$lib/utils.js';
+  import AdministrationCard from '#lib/components/AdministrationCard.svelte';
+  import DialogModal from '#lib/components/DialogModal.svelte';
+  import { coratellaFormCallback } from '#lib/utils.js';
   import { enhance } from '$app/forms';
 
   let { data } = $props();
   let tags = $derived(data.tags);
-
-  let formName: string = $state('');
-  let formId: number | null = $state(null);
 
   async function deleteTag(id: number) {
     const response = await fetch(`/admin/tags/${id}`, {
@@ -26,7 +23,7 @@
         description: m.tagDeleted(),
         ...toasterOptions,
       });
-      await invalidateAll();
+      await refreshAll();
     } else {
       toaster.error({
         title: m.error(),
@@ -62,7 +59,7 @@
           successMessage: Number.isNaN(tagId)
             ? m.tagCreationSuccessful()
             : m.successfulModification(),
-          invalidateAll: true,
+          refreshAll: true,
           callback: async () => {},
           preHook: () => {},
         })}

@@ -1,9 +1,8 @@
 import { users } from './schema';
 import { eq } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { hash } from '@node-rs/argon2';
-import { argonOptions } from '$lib/server/db/utils';
+import { argonOptions } from '#lib/server/db/utils.ts';
 
 export async function updateUser(id: string, username?: string, password?: string) {
   const updateSet: {
@@ -24,7 +23,7 @@ export async function createUser(username: string, password: string) {
   return await db
     .insert(users)
     .values({
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       username,
       password: hashedPassword,
     })

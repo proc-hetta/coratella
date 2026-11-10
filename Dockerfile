@@ -1,7 +1,7 @@
-FROM node:23-alpine AS base
+FROM node:26-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN npm install -g pnpm@12.17.0
 COPY . /app
 WORKDIR /app
 

@@ -7,11 +7,11 @@ import * as authorEndpoint from '../routes/admin/authors/[id=number]/+server';
 import * as usersPage from '../routes/admin/users/+page.server';
 import * as userEndpoint from '../routes/admin/users/[id]/+server';
 import * as profilePage from '../routes/admin/profile/+page.server';
-import { createAuthor, getAuthors } from '$lib/server/db/authors';
-import { createUser, getUsers } from '$lib/server/db/users';
-import { argonOptions } from '$lib/server/db/utils';
-import { db } from '$lib/server/db';
-import { users } from '$lib/server/db/schema';
+import { createAuthor, getAuthors } from '#lib/server/db/authors.ts';
+import { createUser, getUsers } from '#lib/server/db/users.ts';
+import { argonOptions } from '#lib/server/db/utils.ts';
+import { db } from '#lib/server/db/index.ts';
+import { users } from '#lib/server/db/schema.ts';
 
 const author = {
   nickname: 'nick',

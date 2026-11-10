@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CategoryBadge from '$lib/components/CategoryBadge.svelte';
+  import CategoryBadge from '#lib/components/CategoryBadge.svelte';
   import { Avatar } from '@skeletonlabs/skeleton-svelte';
 
   let { data } = $props();

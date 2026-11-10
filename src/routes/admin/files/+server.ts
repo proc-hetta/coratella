@@ -1,6 +1,4 @@
-import { m } from '$lib/paraglide/messages';
-import { toaster, toasterOptions } from '$lib/toaster';
-import { torcoloUpload } from '$lib/utils';
+import { torcoloUpload } from '#lib/server/torcolo.ts';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -11,7 +9,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return new Response(null, { status: 401 });
   }
 
-  let response = new Response(null, { status: 201 });
+  const response = new Response(null, { status: 201 });
   response.headers.append('Location', fileUrl!);
   return response;
 };

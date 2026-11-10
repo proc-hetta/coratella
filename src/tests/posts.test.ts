@@ -5,18 +5,18 @@ import * as postsPage from '../routes/admin/posts/+page.server';
 import * as postsEndpoint from '../routes/admin/posts/+server';
 import * as postEndpoint from '../routes/admin/posts/[id=numberOrNew]/+server';
 import * as postEditor from '../routes/admin/posts/[id=numberOrNew]/+page.server';
-import { createAuthor } from '$lib/server/db/authors';
-import { createCategory } from '$lib/server/db/categories';
-import { createTag } from '$lib/server/db/tags';
+import { createAuthor } from '#lib/server/db/authors.ts';
+import { createCategory } from '#lib/server/db/categories.ts';
+import { createTag } from '#lib/server/db/tags.ts';
 import {
   getPost,
   getPosts,
   incrementVisits,
   totalVisits,
   updateOrCreatePost,
-} from '$lib/server/db/posts';
-import { db } from '$lib/server/db';
-import { postsToAuthors, postsToCategories, postsToTags } from '$lib/server/db/schema';
+} from '#lib/server/db/posts.ts';
+import { db } from '#lib/server/db/index.ts';
+import { postsToAuthors, postsToCategories, postsToTags } from '#lib/server/db/schema.ts';
 
 async function relations() {
   const [author] = await createAuthor('nick', 'n@x.it', 'N', 'K', 'img');

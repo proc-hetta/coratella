@@ -1,30 +1,18 @@
-import { toaster, toasterOptions } from '$lib/toaster';
-import { m } from '$lib/paraglide/messages';
-import type { ActionResult } from '@sveltejs/kit';
+import type { SubmitFunction } from '$app/forms';
+import { toaster, toasterOptions } from '#lib/toaster.ts';
+import { m } from '#lib/paraglide/messages.js';
 
 export function coratellaFormCallback(params: {
   successMessage: string;
-  invalidateAll: boolean;
+  refreshAll: boolean;
   callback: () => Promise<void>;
   preHook: () => void;
-}) {
+}): SubmitFunction {
   return () => {
-    const { successMessage, invalidateAll, callback, preHook } = params;
+    const { successMessage, refreshAll, callback, preHook } = params;
 
     preHook();
-    return async ({
-      result,
-      update,
-    }: {
-      result: ActionResult;
-      update: ({
-        reset,
-        invalidateAll,
-      }: {
-        reset?: boolean;
-        invalidateAll?: boolean;
-      }) => Promise<void>;
-    }) => {
+    return async ({ result, update }) => {
       if (['redirect', 'success'].includes(result.type)) {
         toaster.success({
           title: m.success(),
@@ -46,41 +34,8 @@ export function coratellaFormCallback(params: {
 
       return update({
         reset: false,
-        invalidateAll,
+        refreshAll,
       });
     };
   };
-}
-
-export async function torcoloUpload(file: File) {
-  const torcoloUrl = process.env.TORCOLO_URL;
-  const torcoloToken = process.env.TORCOLO_TOKEN;
-
-  let formData = new FormData();
-  formData.append('file', file);
-
-  if (process.env.TORCOLO_URL === undefined || process.env.TORCOLO_TOKEN === undefined) {
-    return '';
-  }
-
-  const response = await fetch(`${torcoloUrl}/files`, {
-    method: 'POST',
-    body: formData,
-    headers: {
-      Authorization: `Bearer ${torcoloToken}`,
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`Error while uploading file, status code ${response.status}`);
-  }
-  return `${torcoloUrl}${response.headers.get('Location')}`;
-}
-
-export function capitalize(str: String) {
-  return str
-    .trim()
-    .toLowerCase()
-    .split(' ')
-    .map((word: String) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
 }

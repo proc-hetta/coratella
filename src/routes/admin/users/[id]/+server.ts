@@ -1,4 +1,4 @@
-import { deleteUser } from '$lib/server/db/users';
+import { deleteUser } from '#lib/server/db/users.ts';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const DELETE: RequestHandler = async ({ params }) => {

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { invalidateAll } from '$app/navigation';
-  import { themes, modes, getMode, getTheme, setMode, setTheme } from '$lib/themes';
+  import { refreshAll } from '$app/navigation';
+  import { themes, modes, getMode, getTheme, setMode, setTheme } from '#lib/themes.ts';
 
   let selectedTheme = $derived(getTheme());
   let selectedMode = $derived(getMode());
@@ -14,7 +14,7 @@
         onclick={async () => {
           selectedMode = mode;
           setMode(selectedMode);
-          invalidateAll();
+          refreshAll();
         }}
       >
         <span>{mode}</span>
@@ -28,7 +28,7 @@
         onclick={async () => {
           selectedTheme = theme;
           setTheme(selectedTheme);
-          invalidateAll();
+          refreshAll();
         }}
       >
         <span>{theme}</span>

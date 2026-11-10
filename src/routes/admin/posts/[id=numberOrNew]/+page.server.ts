@@ -1,9 +1,9 @@
 import { redirect } from '@sveltejs/kit';
-import { getCategories } from '$lib/server/db/categories';
-import { getTags } from '$lib/server/db/tags';
-import { getPost } from '$lib/server/db/posts';
+import { getCategories } from '#lib/server/db/categories.ts';
+import { getTags } from '#lib/server/db/tags.ts';
+import { getPost } from '#lib/server/db/posts.ts';
 import type { PageServerLoad } from './$types';
-import { getAuthors } from '$lib/server/db/authors';
+import { getAuthors } from '#lib/server/db/authors.ts';
 
 export const load: PageServerLoad = async ({ params }) => {
   let post = null;

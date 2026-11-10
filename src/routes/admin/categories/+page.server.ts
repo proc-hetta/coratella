@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 import type { PageServerLoad } from '../$types';
-import { getCategories, createCategory, updateCategory } from '$lib/server/db/categories';
+import { getCategories, createCategory, updateCategory } from '#lib/server/db/categories.ts';
 
 export const load: PageServerLoad = async () => {
   return {

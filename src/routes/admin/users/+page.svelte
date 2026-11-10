@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { goto, invalidateAll } from '$app/navigation';
-  import { toaster, toasterOptions } from '$lib/toaster';
-  import { m } from '$lib/paraglide/messages';
+  import { goto, refreshAll } from '$app/navigation';
+  import { toaster, toasterOptions } from '#lib/toaster.ts';
+  import { m } from '#lib/paraglide/messages.js';
   import { Trash, Pencil, Plus } from '@lucide/svelte';
-  import AdministrationCard from '$lib/components/AdministrationCard.svelte';
-  import DialogModal from '$lib/components/DialogModal.svelte';
-  import { coratellaFormCallback } from '$lib/utils';
+  import AdministrationCard from '#lib/components/AdministrationCard.svelte';
+  import DialogModal from '#lib/components/DialogModal.svelte';
+  import { coratellaFormCallback } from '#lib/utils.ts';
   import { enhance } from '$app/forms';
 
   let { data } = $props();
@@ -23,7 +23,7 @@
         description: m.userDeleted(),
         ...toasterOptions,
       });
-      await invalidateAll();
+      await refreshAll();
     } else {
       toaster.error({
         title: m.error(),
@@ -57,7 +57,7 @@
         class="flex flex-col items-center justify-center gap-2"
         use:enhance={coratellaFormCallback({
           successMessage: userId === null ? m.userCreationSuccessful() : m.successfulModification(),
-          invalidateAll: true,
+          refreshAll: true,
           callback: async () => {},
           preHook: () => {},
         })}
@@ -122,26 +122,3 @@
     </tbody>
   </table>
 </AdministrationCard>
-
-<!-- <UserFormModal
-  title={m.createUser()}
-  action="?/create"
-  callback={async () => (createModalOpen = false)}
-  successMessage={m.userCreationSuccessful()}
-  bind:modalOpen={createModalOpen}
-  bind:username={formUsername}
-  bind:password={formPassword}
-  bind:id={formId}
-/>
-
-<UserFormModal
-  title={m.editUser()}
-  action="?/edit"
-  callback={async () => (editModalOpen = false)}
-  successMessage={m.successfulModification()}
-  bind:modalOpen={editModalOpen}
-  bind:username={formUsername}
-  bind:password={formPassword}
-  bind:id={formId}
-/>
--->

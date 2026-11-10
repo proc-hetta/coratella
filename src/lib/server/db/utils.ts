@@ -1,4 +1,4 @@
-import { db } from '$lib/server/db';
+import { db } from '#lib/server/db/index.ts';
 import { count, Table } from 'drizzle-orm';
 
 export async function rowsCount(table: Table) {

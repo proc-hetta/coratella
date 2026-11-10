@@ -4,10 +4,10 @@ import { call, cookieJar, newPost, thrown } from './helpers';
 import * as homePage from '../routes/(non-admin)/+page.server';
 import * as postPage from '../routes/(non-admin)/posts/[id=number]/+page.server';
 import * as passwordPage from '../routes/(non-admin)/password/+page.server';
-import { createAuthor } from '$lib/server/db/authors';
-import { createCategory } from '$lib/server/db/categories';
-import { getPost, updateOrCreatePost } from '$lib/server/db/posts';
-import type { Post } from '$lib/server/db/schema';
+import { createAuthor } from '#lib/server/db/authors.ts';
+import { createCategory } from '#lib/server/db/categories.ts';
+import { getPost, updateOrCreatePost } from '#lib/server/db/posts.ts';
+import type { Post } from '#lib/server/db/schema.ts';
 
 async function seedPost(overrides = {}) {
   const [author] = await createAuthor('nick');

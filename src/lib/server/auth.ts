@@ -1,23 +1,21 @@
 import * as jose from 'jose';
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { env } from '$env/dynamic/private';
-import * as table from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.ts';
+import { CORATELLA_SECRET } from '$app/env/private';
+import * as table from '#lib/server/db/schema.ts';
 import type { RequestEvent } from '@sveltejs/kit';
 
 export const sessionCookieName = 'auth-session';
-const sessionCookieKey = new TextEncoder().encode(env.CORATELLA_SECRET);
+
+const sessionCookieKey = new TextEncoder().encode(CORATELLA_SECRET);
 
 export async function generateSessionToken(user: table.User) {
   const token = await new jose.SignJWT({})
-    .setProtectedHeader({
-      alg: 'HS256',
-    })
+    .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('24h')
     .setIssuedAt(Math.floor(Date.now() / 1000))
     .setSubject(user.id)
     .sign(sessionCookieKey);
-
   const payload = jose.decodeJwt(token);
 
   return { token, payload };
@@ -28,7 +26,7 @@ export async function validateSessionToken(token: string) {
 
   try {
     payload = (await jose.jwtVerify(token, sessionCookieKey)).payload;
-  } catch (e) {
+  } catch {
     return { user: null, payload: null };
   }
 

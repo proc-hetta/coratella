@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 import type { PageServerLoad } from '../$types';
-import { getTags, createTag, updateTag } from '$lib/server/db/tags';
+import { getTags, createTag, updateTag } from '#lib/server/db/tags.ts';
 
 export const load: PageServerLoad = async () => {
   return {

@@ -1,5 +1,5 @@
 import type { Cookies } from '@sveltejs/kit';
-import type { FullPost } from '$lib/server/db/posts';
+import type { FullPost } from '#lib/server/db/posts.ts';
 
 export function formRequest(fields: Record<string, string>, url = 'http://localhost/') {
   const body = new FormData();

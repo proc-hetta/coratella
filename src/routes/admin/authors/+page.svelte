@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { toaster, toasterOptions } from '$lib/toaster.js';
-  import { m } from '$lib/paraglide/messages';
-  import { invalidateAll } from '$app/navigation';
+  import { toaster, toasterOptions } from '#lib/toaster.js';
+  import { m } from '#lib/paraglide/messages.js';
+  import { refreshAll } from '$app/navigation';
   import { Trash, Pencil, Plus } from '@lucide/svelte';
 
-  import AdministrationCard from '$lib/components/AdministrationCard.svelte';
+  import AdministrationCard from '#lib/components/AdministrationCard.svelte';
   import { Avatar } from '@skeletonlabs/skeleton-svelte';
-  import DialogModal from '$lib/components/DialogModal.svelte';
-  import { coratellaFormCallback } from '$lib/utils';
+  import DialogModal from '#lib/components/DialogModal.svelte';
+  import { coratellaFormCallback } from '#lib/utils.ts';
   import { enhance } from '$app/forms';
-  import ImageFrame from '$lib/components/ImageFrame.svelte';
+  import ImageFrame from '#lib/components/ImageFrame.svelte';
   import { tick } from 'svelte';
 
   let { data } = $props();
@@ -29,7 +29,7 @@
         description: m.authorDeleted(),
         ...toasterOptions,
       });
-      await invalidateAll();
+      await refreshAll();
     } else {
       toaster.error({
         title: m.error(),
@@ -103,7 +103,7 @@
           successMessage: Number.isNaN(authorId)
             ? m.authorCreationSuccessful()
             : m.successfulModification(),
-          invalidateAll: true,
+          refreshAll: true,
           callback: async () => {},
           preHook: () => {},
         })}

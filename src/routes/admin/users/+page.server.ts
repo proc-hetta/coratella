@@ -1,7 +1,7 @@
-import { getUsers, createUser, updateUser } from '$lib/server/db/users';
+import { getUsers, createUser, updateUser } from '#lib/server/db/users.ts';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
   let reducedUser: {

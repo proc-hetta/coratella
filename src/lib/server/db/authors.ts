@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { authors } from '$lib/server/db/schema';
+import { db } from '#lib/server/db/index.ts';
+import { authors } from '#lib/server/db/schema.ts';
 
 export async function updateAuthor(
   id: number,

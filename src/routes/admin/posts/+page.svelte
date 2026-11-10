@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { toaster, toasterOptions } from '$lib/toaster.js';
-  import { m } from '$lib/paraglide/messages.js';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { toaster, toasterOptions } from '#lib/toaster.js';
+  import { m } from '#lib/paraglide/messages.js';
+  import { goto, refreshAll } from '$app/navigation';
   import { Trash, Pencil, Check, Plus } from '@lucide/svelte';
-  import AdministrationCard from '$lib/components/AdministrationCard.svelte';
-  import DialogModal from '$lib/components/DialogModal.svelte';
+  import AdministrationCard from '#lib/components/AdministrationCard.svelte';
+  import DialogModal from '#lib/components/DialogModal.svelte';
 
   let { data } = $props();
   let posts = $derived(data.posts);
@@ -27,7 +27,7 @@
         description: m.postDeleted(),
         ...toasterOptions,
       });
-      await invalidateAll();
+      await refreshAll();
     } else {
       toaster.error({
         title: m.error(),

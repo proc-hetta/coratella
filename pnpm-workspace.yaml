@@ -1,0 +1,5 @@
+allowBuilds:
+  esbuild: true
+minimumReleaseAgeExclude:
+  - jose@6.2.17
+  - marked@18.2.0

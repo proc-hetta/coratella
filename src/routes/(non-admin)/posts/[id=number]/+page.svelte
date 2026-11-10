@@ -1,9 +1,8 @@
 <script lang="ts">
   import { Avatar, Progress } from '@skeletonlabs/skeleton-svelte';
-  import { getMarkdownProcessors } from '$lib/marked.js';
+  import { getMarkdownProcessors } from '#lib/marked.js';
   import DOMPurify from 'isomorphic-dompurify';
-  import CategoryBadge from '$lib/components/CategoryBadge.svelte';
-  import { Circle } from '@lucide/svelte';
+  import CategoryBadge from '#lib/components/CategoryBadge.svelte';
 
   let { data } = $props();
   let post = $derived(data.post);

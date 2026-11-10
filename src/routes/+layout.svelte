@@ -1,7 +1,7 @@
 <script lang="ts">
   import '../app.css';
   import { Toast } from '@skeletonlabs/skeleton-svelte';
-  import { toaster } from '$lib/toaster';
+  import { toaster } from '#lib/toaster.ts';
 
   let { children } = $props();
 </script>

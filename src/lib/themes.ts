@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 export const defaultTheme = 'wintry';
 export const themes = ['wintry', 'reign', 'mint', 'rose', 'pine', 'cerberus'];

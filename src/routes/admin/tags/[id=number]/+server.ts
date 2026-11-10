@@ -1,4 +1,4 @@
-import { deleteTag } from '$lib/server/db/tags';
+import { deleteTag } from '#lib/server/db/tags.ts';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const DELETE: RequestHandler = async ({ params }) => {

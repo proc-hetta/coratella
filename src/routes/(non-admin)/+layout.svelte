@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { Circle, GripVerticalIcon, XIcon } from '@lucide/svelte';
+  import { GripVerticalIcon, XIcon } from '@lucide/svelte';
   import { FloatingPanel, Portal } from '@skeletonlabs/skeleton-svelte';
   import { Paintbrush } from '@lucide/svelte';
-  import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
-  import { fly, scale } from 'svelte/transition';
-  import { bounceInOut, bounceOut, cubicIn, linear } from 'svelte/easing';
+  import ThemeSwitcher from '#lib/components/ThemeSwitcher.svelte';
+  import { bounceInOut, linear } from 'svelte/easing';
   import { Tween } from 'svelte/motion';
 
   let { children } = $props();

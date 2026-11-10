@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 import type { Actions, PageServerLoad } from './$types';
-import { getAuthors, createAuthor, updateAuthor } from '$lib/server/db/authors';
+import { getAuthors, createAuthor, updateAuthor } from '#lib/server/db/authors.ts';
 
 // RFC2822 Email
 const rfc2822_regex =

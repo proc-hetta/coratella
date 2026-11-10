@@ -4,10 +4,10 @@ import * as tagsPage from '../routes/admin/tags/+page.server';
 import * as tagEndpoint from '../routes/admin/tags/[id=number]/+server';
 import * as categoriesPage from '../routes/admin/categories/+page.server';
 import * as categoryEndpoint from '../routes/admin/categories/[id=number]/+server';
-import { createTag, getTags } from '$lib/server/db/tags';
-import { createCategory, getCategories } from '$lib/server/db/categories';
-import { createAuthor } from '$lib/server/db/authors';
-import { updateOrCreatePost } from '$lib/server/db/posts';
+import { createTag, getTags } from '#lib/server/db/tags.ts';
+import { createCategory, getCategories } from '#lib/server/db/categories.ts';
+import { createAuthor } from '#lib/server/db/authors.ts';
+import { updateOrCreatePost } from '#lib/server/db/posts.ts';
 import { newPost } from './helpers';
 
 describe('admin tags', () => {

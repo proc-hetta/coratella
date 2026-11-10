@@ -1,17 +1,19 @@
-import * as auth from '$lib/server/auth.js';
-import { sequence } from '@sveltejs/kit/hooks';
-import { redirect, type Handle } from '@sveltejs/kit';
-import { paraglideMiddleware } from '$lib/paraglide/server';
-import { getMode, getTheme } from '$lib/themes';
+import { redirect } from '@sveltejs/kit';
+import { PUBLIC_TITLE } from '$app/env/public';
+import * as auth from '#lib/server/auth.js';
+import { sequence, type Handle } from '@sveltejs/kit/hooks';
+import { paraglideMiddleware } from '#lib/paraglide/server.js';
+import { getMode, getTheme } from '#lib/themes.ts';
 
 const handleParaglide: Handle = ({ event, resolve }) =>
-  paraglideMiddleware(event.request, ({ request, locale }) => {
-    event.request = request;
-
-    return resolve(event, {
-      transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale),
-    });
-  });
+  paraglideMiddleware(event.request, ({ request, locale }) =>
+    resolve(
+      { ...event, request },
+      {
+        transformPageChunk: ({ html }) => html.replace('%paraglide.lang%', locale),
+      },
+    ),
+  );
 
 const handleAuth: Handle = async ({ event, resolve }) => {
   if (!event.url.pathname.startsWith('/admin')) {
@@ -39,8 +41,7 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 
 const handleTitle: Handle = ({ event, resolve }) => {
   return resolve(event, {
-    transformPageChunk: ({ html }) =>
-      html.replace('%title%', process.env.PUBLIC_TITLE ?? 'Coratella'),
+    transformPageChunk: ({ html }) => html.replace('%title%', PUBLIC_TITLE ?? 'Coratella'),
   });
 };
 

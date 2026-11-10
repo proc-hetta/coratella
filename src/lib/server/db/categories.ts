@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { categories } from '$lib/server/db/schema';
-import type { HSL, RGB } from './color';
+import { db } from '#lib/server/db/index.ts';
+import { categories } from '#lib/server/db/schema.ts';
 
 export async function updateCategory(id: number, name: string, color: string | undefined) {
   await db.update(categories).set({ name, color }).where(eq(categories.id, id));

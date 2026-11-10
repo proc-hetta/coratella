@@ -1,8 +1,8 @@
 import { fail } from '@sveltejs/kit';
-import { m } from '$lib/paraglide/messages';
+import { m } from '#lib/paraglide/messages.js';
 import type { PageServerLoad } from './$types';
-import { updateUser } from '$lib/server/db/users';
-import type { User } from '$lib/server/db/schema';
+import { updateUser } from '#lib/server/db/users.ts';
+import type { User } from '#lib/server/db/schema.ts';
 
 export const load: PageServerLoad = async ({ locals }) => {
   const user: User = locals.user;

@@ -1,18 +1,18 @@
-import { getPosts } from '$lib/server/db/posts';
+import { getPosts } from '#lib/server/db/posts.ts';
 import type { PageServerLoad } from './$types';
-import { env } from '$env/dynamic/public';
-import { defaultMode, modes, themes } from '$lib/themes';
+import { PUBLIC_TITLE, PUBLIC_LOGODARK, PUBLIC_LOGOLIGHT, PUBLIC_LOGO } from '$app/env/public';
+import { defaultMode, modes, themes } from '#lib/themes.ts';
 
 export const load: PageServerLoad = async ({ cookies }) => {
   const posts = (await getPosts()) ?? [];
   posts.map((post) => (post.content = ''));
   const mode = cookies.get('mode') ?? defaultMode;
   return {
-    posts: posts,
-    title: env.PUBLIC_TITLE,
+    posts,
+    title: PUBLIC_TITLE,
     logo:
-      (mode === 'dark' ? env.PUBLIC_LOGODARK : env.PUBLIC_LOGOLIGHT) ??
-      env.PUBLIC_LOGO ??
+      (mode === 'dark' ? PUBLIC_LOGODARK : PUBLIC_LOGOLIGHT) ??
+      PUBLIC_LOGO ??
       './src/lib/images/logo.svg',
     themes,
     modes,

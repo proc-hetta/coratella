@@ -1,8 +1,7 @@
-import { eq, sql } from 'drizzle-orm';
-import { db } from '$lib/server/db';
-import { posts, postsToAuthors, postsToCategories, postsToTags } from '$lib/server/db/schema';
-import type { Author, Category, Post, Tag } from '$lib/server/db/schema.js';
-import { sum } from 'drizzle-orm';
+import { eq, sql, sum } from 'drizzle-orm';
+import { db } from '#lib/server/db/index.ts';
+import { posts, postsToAuthors, postsToCategories, postsToTags } from '#lib/server/db/schema.ts';
+import type { Author, Category, Post, Tag } from '#lib/server/db/schema.js';
 
 export type FullPost = Post & {
   tags: Tag[];
@@ -20,7 +19,7 @@ export async function getPosts() {
     with: {
       postsToTags: {
         with: {
-          tag: true || false,
+          tag: true,
         },
       },
       postsToCategories: {

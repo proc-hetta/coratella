@@ -1,14 +1,14 @@
 <script lang="ts">
-  import { m } from '$lib/paraglide/messages';
-  import type { Author, Category, Tag } from '$lib/server/db/schema.js';
+  import { m } from '#lib/paraglide/messages.js';
+  import type { Author, Category, Tag } from '#lib/server/db/schema.js';
   import { Tabs } from '@skeletonlabs/skeleton-svelte';
   import DOMPurify from 'isomorphic-dompurify';
   import { Progress } from '@skeletonlabs/skeleton-svelte';
-  import { getMarkdownProcessors } from '$lib/marked.js';
-  import { type FullPost } from '$lib/server/db/posts.js';
-  import { goto, invalidateAll } from '$app/navigation';
-  import { toaster, toasterOptions } from '$lib/toaster.js';
-  import { browser } from '$app/environment';
+  import { getMarkdownProcessors } from '#lib/marked.js';
+  import { type FullPost } from '#lib/server/db/posts.js';
+  import { goto, refreshAll } from '$app/navigation';
+  import { toaster, toasterOptions } from '#lib/toaster.js';
+  import { browser } from '$app/env';
 
   let { data } = $props();
   let sourcePost: FullPost | null = $derived(data.post);
@@ -103,7 +103,7 @@
         description: m.postSaved(),
         ...toasterOptions,
       });
-      await invalidateAll();
+      await refreshAll();
       goto('/admin/posts');
     } else {
       toaster.error({
@@ -224,6 +224,7 @@
       </div>
     </form>
   </div>
+
   <Tabs defaultValue={group} onValueChange={(e) => (group = e.value)}>
     <Tabs.List>
       <Tabs.Trigger value="editor">Editor</Tabs.Trigger>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import { m } from '$lib/paraglide/messages';
-  import { coratellaFormCallback } from '$lib/utils';
+  import { m } from '#lib/paraglide/messages.js';
+  import { coratellaFormCallback } from '#lib/utils.ts';
   import { Progress } from '@skeletonlabs/skeleton-svelte';
 
   const { data } = $props();
@@ -17,7 +17,7 @@
       method="POST"
       use:enhance={coratellaFormCallback({
         successMessage: m.loginSuccess(),
-        invalidateAll: false,
+        refreshAll: false,
         callback: async () => {
           running = false;
         },

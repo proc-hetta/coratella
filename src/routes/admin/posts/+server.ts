@@ -1,5 +1,5 @@
-import type { FullPost } from '$lib/server/db/posts';
-import { deletePost, updateOrCreatePost } from '$lib/server/db/posts';
+import type { FullPost } from '#lib/server/db/posts.ts';
+import { updateOrCreatePost } from '#lib/server/db/posts.ts';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -8,7 +8,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return new Response(null, { status: 403 });
   }
   const body = await updateOrCreatePost(data);
-  let response = new Response(JSON.stringify(body), { status: 200 });
+  const response = new Response(JSON.stringify(body), { status: 200 });
   response.headers.append('Location', `/admin/posts/${body!.id}`);
   return response;
 };

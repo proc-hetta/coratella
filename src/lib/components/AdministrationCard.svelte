@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { Plus } from '@lucide/svelte';
-
   let { title, children, addElement } = $props();
 </script>
 

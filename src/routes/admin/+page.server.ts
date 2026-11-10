@@ -1,9 +1,9 @@
-import { rowsCount } from '$lib/server/db/utils';
-import { totalVisits } from '$lib/server/db/posts';
+import { rowsCount } from '#lib/server/db/utils.ts';
+import { totalVisits } from '#lib/server/db/posts.ts';
 import type { PageServerLoad } from './$types';
-import { tags, posts, users, authors, categories } from '$lib/server/db/schema';
-import { env } from '$env/dynamic/public';
-import { getMode } from '$lib/themes';
+import { tags, posts, users, authors, categories } from '#lib/server/db/schema.ts';
+import { PUBLIC_TITLE, PUBLIC_LOGODARK, PUBLIC_LOGOLIGHT, PUBLIC_LOGO } from '$app/env/public';
+import { getMode } from '#lib/themes.ts';
 
 export const load: PageServerLoad = async () => {
   return {
@@ -14,10 +14,10 @@ export const load: PageServerLoad = async () => {
     authorsCount: await rowsCount(authors),
     categoriesCount: await rowsCount(categories),
     totalVisits: await totalVisits(),
-    title: env.PUBLIC_TITLE,
+    title: PUBLIC_TITLE,
     logo:
-      (getMode() === 'dark' ? env.PUBLIC_LOGODARK : env.PUBLIC_LOGOLIGHT) ??
-      env.PUBLIC_LOGO ??
+      (getMode() === 'dark' ? PUBLIC_LOGODARK : PUBLIC_LOGOLIGHT) ??
+      PUBLIC_LOGO ??
       './src/lib/images/logo.svg',
   };
 };
