@@ -13,45 +13,43 @@ import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeKatex from 'rehype-katex';
 
-export function getMarkdownProcessors(useMath: boolean, useToc: boolean) {
+/** Strips `{#...}` attribute blocks, which the renderers below do not support. */
+function preprocess(text: string) {
+  return text.replaceAll(/\{#.+\}/g, '');
+}
+
+/**
+ * Renders post markdown to HTML. The content goes through, in order:
+ * `preprocess` -> remark (GFM, optional TOC and math) -> marked (code highlighting) -> rehype
+ * (heading slugs and anchors). The result is not sanitized.
+ */
+export function renderMarkdown(content: string, useMath: boolean, useToc: boolean) {
+  const remarkProcessor = remark().use(remarkHighlight).use(remarkGfm);
+  if (useToc) {
+    remarkProcessor.use(remarkToc);
+  }
+  if (useMath) {
+    remarkProcessor.use(remarkMath).use(remarkRehype).use(rehypeKatex).use(rehypeStringify);
+  }
+
   const marked = new Marked(
     markedHighlight({
       emptyLangClass: 'hljs',
       langPrefix: 'hljs language-',
-      highlight(code, lang, _info) {
+      highlight(code, lang) {
         const language = hljs.getLanguage(lang) ? lang : 'plaintext';
         return hljs.highlight(code, { language }).value;
       },
     }),
   );
+  marked.use({ async: false, gfm: true });
 
-  marked.use({
-    async: false,
-    gfm: true,
-  });
-
-  let textPreprocessor = (text: String) => {
-    return text.replaceAll(/\{\#.+\}/g, '').toString();
-  };
-
-  let textProcessor = remark().use(remarkHighlight).use(remarkGfm);
-
-  let htmlProcessor = rehype()
+  const rehypeProcessor = rehype()
     .data('settings', { fragment: true })
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings);
 
-  if (useToc) {
-    textProcessor.use(remarkToc);
-  }
-  if (useMath) {
-    textProcessor.use(remarkMath).use(remarkRehype).use(rehypeKatex).use(rehypeStringify);
-  }
-
-  return {
-    preprocess: textPreprocessor,
-    marked: marked,
-    remark: textProcessor,
-    rehype: htmlProcessor,
-  };
+  const markdown = String(remarkProcessor.processSync(preprocess(content)));
+  const html = marked.parse(markdown) as string;
+  return String(rehypeProcessor.processSync(html));
 }

@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
+import { serverFailure } from '#lib/server/actions.ts';
 import { m } from '#lib/paraglide/messages.js';
-import type { PageServerLoad } from '../$types';
+import type { Actions, PageServerLoad } from './$types';
 import { getTags, createTag, updateTag } from '#lib/server/db/tags.ts';
 
 export const load: PageServerLoad = async () => {
@@ -9,7 +10,7 @@ export const load: PageServerLoad = async () => {
   };
 };
 
-export const actions = {
+export const actions: Actions = {
   create: async ({ request }) => {
     const data = await request.formData();
 
@@ -20,8 +21,8 @@ export const actions = {
     }
     try {
       await createTag(name.toString());
-    } catch (e: any) {
-      return fail(500, { message: e.toString() });
+    } catch (e) {
+      return serverFailure(e);
     }
   },
   edit: async ({ request }) => {
@@ -37,8 +38,8 @@ export const actions = {
     }
     try {
       await updateTag(parseInt(id.toString()), name.toString());
-    } catch (e: any) {
-      return fail(500, { message: e.toString() });
+    } catch (e) {
+      return serverFailure(e);
     }
   },
 };

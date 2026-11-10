@@ -1,24 +1,17 @@
 import { getUsers, createUser, updateUser } from '#lib/server/db/users.ts';
+import { publicUser, serverFailure } from '#lib/server/actions.ts';
 import { fail } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { m } from '#lib/paraglide/messages.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  let reducedUser: {
-    id: string;
-    username: string;
-  } = {
-    id: locals.user.id,
-    username: locals.user.username,
-  };
-
   return {
     users: await getUsers(),
-    user: reducedUser,
+    user: publicUser(locals.user!),
   };
 };
 
-export const actions = {
+export const actions: Actions = {
   create: async ({ request }) => {
     const data = await request.formData();
 
@@ -30,8 +23,8 @@ export const actions = {
     }
     try {
       await createUser(username.toString(), password.toString());
-    } catch (e: any) {
-      return fail(500, { message: e.toString() });
+    } catch (e) {
+      return serverFailure(e);
     }
   },
   edit: async ({ request }) => {
@@ -43,12 +36,12 @@ export const actions = {
     }
     try {
       await updateUser(
-        id!.toString(),
+        id.toString(),
         data.get('username')?.toString(),
         data.get('password')?.toString(),
       );
-    } catch (e: any) {
-      return fail(500, { message: e.toString() });
+    } catch (e) {
+      return serverFailure(e);
     }
   },
 };

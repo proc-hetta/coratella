@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { toaster, toasterOptions } from '#lib/toaster.js';
+  import { deleteResource } from '#lib/admin.ts';
   import { m } from '#lib/paraglide/messages.js';
-  import { goto, refreshAll } from '$app/navigation';
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { Trash, Pencil, Check, Plus } from '@lucide/svelte';
   import AdministrationCard from '#lib/components/AdministrationCard.svelte';
   import DialogModal from '#lib/components/DialogModal.svelte';
@@ -10,31 +11,15 @@
   let posts = $derived(data.posts);
 
   function createNewPost() {
-    goto(`/admin/posts/new`);
+    goto(resolve('/admin/posts/[id=numberOrNew]', { id: 'new' }));
   }
 
   function editPost(id: number) {
-    goto(`/admin/posts/${id}`);
+    goto(resolve('/admin/posts/[id=numberOrNew]', { id: String(id) }));
   }
 
-  async function deletePost(id: number) {
-    const response = await fetch(`/admin/posts/${id}`, {
-      method: 'DELETE',
-    });
-    if (response.ok) {
-      toaster.success({
-        title: m.success(),
-        description: m.postDeleted(),
-        ...toasterOptions,
-      });
-      await refreshAll();
-    } else {
-      toaster.error({
-        title: m.error(),
-        description: m.errorWhileDeleting(),
-        ...toasterOptions,
-      });
-    }
+  function deletePost(id: number) {
+    return deleteResource(`/admin/posts/${id}`, m.postDeleted());
   }
 </script>
 
@@ -90,7 +75,7 @@
               </button>
               <DialogModal
                 title={m.deletePost()}
-                onAccept="{() => deletePost(post.id)},"
+                onAccept={() => deletePost(post.id)}
                 triggerClass="btn-icon"
               >
                 {#snippet trigger()}

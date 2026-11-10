@@ -1,4 +1,5 @@
 import { fail } from '@sveltejs/kit';
+import { serverFailure } from '#lib/server/actions.ts';
 import { m } from '#lib/paraglide/messages.js';
 import type { Actions, PageServerLoad } from './$types';
 import { getAuthors, createAuthor, updateAuthor } from '#lib/server/db/authors.ts';
@@ -38,8 +39,8 @@ export const actions: Actions = {
         lastName?.toString(),
         image?.toString(),
       );
-    } catch (e: any) {
-      return fail(500, { message: e.toString() });
+    } catch (e) {
+      return serverFailure(e);
     }
   },
   edit: async ({ request }) => {
@@ -63,8 +64,8 @@ export const actions: Actions = {
         data.get('lastName')?.toString(),
         data.get('image')?.toString(),
       );
-    } catch (e: any) {
-      return fail(500, { message: e.toString() });
+    } catch (e) {
+      return serverFailure(e);
     }
   },
 };

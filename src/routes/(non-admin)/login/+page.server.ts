@@ -7,18 +7,10 @@ import * as table from '#lib/server/db/schema.ts';
 import { argonOptions } from '#lib/server/db/utils.ts';
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { PUBLIC_TITLE, PUBLIC_LOGODARK, PUBLIC_LOGOLIGHT, PUBLIC_LOGO } from '$app/env/public';
-import { getMode } from '#lib/themes.ts';
+import { branding } from '#lib/server/branding.ts';
+import { defaultMode } from '#lib/themes.ts';
 
-export const load: PageServerLoad = async () => {
-  return {
-    title: PUBLIC_TITLE,
-    logo:
-      (getMode() === 'dark' ? PUBLIC_LOGODARK : PUBLIC_LOGOLIGHT) ??
-      PUBLIC_LOGO ??
-      './src/lib/images/logo.svg',
-  };
-};
+export const load: PageServerLoad = async () => branding(defaultMode);
 
 export const actions: Actions = {
   default: async (event) => {
@@ -30,16 +22,13 @@ export const actions: Actions = {
       return fail(400, { message: m.insertBothUsernameAndPassword() });
     }
 
-    const results = await db
+    const [user] = await db
       .select()
       .from(table.users)
       .where(eq(table.users.username, username.toString()));
 
-    const user = results.at(0);
-    const validPassword = user
-      ? await verify(user.password, password.toString(), argonOptions)
-      : null;
-    if (!user || !validPassword) {
+    const validPassword = user && (await verify(user.password, password.toString(), argonOptions));
+    if (!validPassword) {
       return fail(401, { message: m.incorrectUsernameOrPassword() });
     }
 

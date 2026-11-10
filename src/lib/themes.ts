@@ -5,38 +5,26 @@ export const themes = ['wintry', 'reign', 'mint', 'rose', 'pine', 'cerberus'];
 export const defaultMode = 'system';
 export const modes = ['system', 'dark', 'light'];
 
-export function getTheme() {
-  return browser
-    ? (document.cookie
-        .split('; ')
-        .find((v) => v.includes('theme='))
-        ?.split('=')[1] ??
-        document.documentElement.getAttribute('data-theme') ??
-        defaultTheme)
-    : defaultTheme;
+type Preference = 'theme' | 'mode';
+
+/** Reads a preference from its cookie, then from the `data-*` attribute on `<html>`. */
+function readPreference(name: Preference, fallback: string) {
+  if (!browser) return fallback;
+  const fromCookie = document.cookie
+    .split('; ')
+    .find((v) => v.includes(`${name}=`))
+    ?.split('=')[1];
+  return fromCookie ?? document.documentElement.getAttribute(`data-${name}`) ?? fallback;
 }
 
-export function setTheme(theme: string) {
-  if (browser) {
-    document.documentElement.setAttribute('data-theme', theme);
-    document.cookie = `theme=${theme}; path=/`;
-  }
+/** Applies a preference to `<html>` and persists it in a cookie read by the server hooks. */
+function writePreference(name: Preference, value: string) {
+  if (!browser) return;
+  document.documentElement.setAttribute(`data-${name}`, value);
+  document.cookie = `${name}=${value}; path=/`;
 }
 
-export function getMode() {
-  return browser
-    ? (document.cookie
-        .split('; ')
-        .find((v) => v.includes('mode='))
-        ?.split('=')[1] ??
-        document.documentElement.getAttribute('data-mode') ??
-        defaultMode)
-    : defaultMode;
-}
-
-export function setMode(mode: string) {
-  if (browser) {
-    document.documentElement.setAttribute('data-mode', mode);
-    document.cookie = `mode=${mode}; path=/`;
-  }
-}
+export const getTheme = () => readPreference('theme', defaultTheme);
+export const setTheme = (theme: string) => writePreference('theme', theme);
+export const getMode = () => readPreference('mode', defaultMode);
+export const setMode = (mode: string) => writePreference('mode', mode);

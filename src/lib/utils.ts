@@ -1,41 +1,36 @@
 import type { SubmitFunction } from '$app/forms';
-import { toaster, toasterOptions } from '#lib/toaster.ts';
+import { notifyError, notifySuccess } from '#lib/toaster.ts';
 import { m } from '#lib/paraglide/messages.js';
 
-export function coratellaFormCallback(params: {
+/**
+ * `use:enhance` handler for admin forms: shows a success or error toast, then applies the default
+ * update without resetting the form. `preHook` runs on submit, `callback` once the result is known.
+ */
+export function coratellaFormCallback({
+  successMessage,
+  refreshAll,
+  callback = async () => {},
+  preHook = () => {},
+}: {
   successMessage: string;
   refreshAll: boolean;
-  callback: () => Promise<void>;
-  preHook: () => void;
+  callback?: () => Promise<void>;
+  preHook?: () => void;
 }): SubmitFunction {
   return () => {
-    const { successMessage, refreshAll, callback, preHook } = params;
-
     preHook();
     return async ({ result, update }) => {
-      if (['redirect', 'success'].includes(result.type)) {
-        toaster.success({
-          title: m.success(),
-          description: successMessage,
-          ...toasterOptions,
-        });
+      if (result.type === 'success' || result.type === 'redirect') {
+        notifySuccess(successMessage);
       } else {
-        toaster.error({
-          title: m.error(),
-          description:
-            result.type == 'failure'
-              ? (result.data?.message ?? m.unknownError())
-              : m.unknownError(),
-          ...toasterOptions,
-        });
+        notifyError(
+          result.type === 'failure' ? (result.data?.message ?? m.unknownError()) : m.unknownError(),
+        );
       }
 
       await callback();
 
-      return update({
-        reset: false,
-        refreshAll,
-      });
+      return update({ reset: false, refreshAll });
     };
   };
 }

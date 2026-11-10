@@ -1,7 +1,7 @@
 import { eq, sql, sum } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.ts';
 import { posts, postsToAuthors, postsToCategories, postsToTags } from '#lib/server/db/schema.ts';
-import type { Author, Category, Post, Tag } from '#lib/server/db/schema.js';
+import type { Author, Category, Post, Tag } from '#lib/server/db/schema.ts';
 
 export type FullPost = Post & {
   tags: Tag[];
@@ -14,71 +14,43 @@ export async function totalVisits() {
   return result.pop()?.totalVisits ?? 0;
 }
 
-export async function getPosts() {
-  const postsWithRelations = await db.query.posts.findMany({
-    with: {
-      postsToTags: {
-        with: {
-          tag: true,
-        },
-      },
-      postsToCategories: {
-        with: {
-          category: true,
-        },
-      },
-      postsToAuthors: {
-        with: {
-          author: true,
-        },
-      },
-    },
-  });
+const withRelations = {
+  postsToTags: { with: { tag: true } },
+  postsToCategories: { with: { category: true } },
+  postsToAuthors: { with: { author: true } },
+} as const;
 
-  if (!postsWithRelations) return null;
+type PostWithRelations = Post & {
+  postsToTags: { tag: Tag }[];
+  postsToCategories: { category: Category }[];
+  postsToAuthors: { author: Author }[];
+};
 
-  const posts = postsWithRelations.map((post) => ({
+function flattenRelations<T extends PostWithRelations>(post: T) {
+  return {
     ...post,
-    tags: post.postsToTags.map((pt) => pt.tag),
-    categories: post.postsToCategories.map((pc) => pc.category),
-    authors: post.postsToAuthors.map((pa) => pa.author),
-  }));
+    tags: post.postsToTags.map(({ tag }) => tag),
+    categories: post.postsToCategories.map(({ category }) => category),
+    authors: post.postsToAuthors.map(({ author }) => author),
+  };
+}
 
-  return posts;
+export async function getPosts() {
+  const rows = await db.query.posts.findMany({ with: withRelations });
+  return rows.map(flattenRelations);
 }
 
 export async function getPost(id: number) {
-  const postWithRelations = await db.query.posts.findFirst({
-    where: eq(posts.id, id),
-    with: {
-      postsToTags: {
-        with: {
-          tag: true,
-        },
-      },
-      postsToCategories: {
-        with: {
-          category: true,
-        },
-      },
-      postsToAuthors: {
-        with: {
-          author: true,
-        },
-      },
-    },
-  });
+  const row = await db.query.posts.findFirst({ where: eq(posts.id, id), with: withRelations });
+  return row ? flattenRelations(row) : null;
+}
 
-  if (!postWithRelations) return null;
-
-  const post = {
-    ...postWithRelations,
-    tags: postWithRelations.postsToTags.map((pt) => pt.tag),
-    categories: postWithRelations.postsToCategories.map((pc) => pc.category),
-    authors: postWithRelations.postsToAuthors.map((pa) => pa.author),
-  };
-
-  return post;
+/** Removes a post and its author/tag/category links inside the given transaction. */
+async function removePost(tx: Pick<typeof db, 'delete'>, id: number) {
+  await tx.delete(postsToAuthors).where(eq(postsToAuthors.postId, id));
+  await tx.delete(postsToTags).where(eq(postsToTags.postId, id));
+  await tx.delete(postsToCategories).where(eq(postsToCategories.postId, id));
+  await tx.delete(posts).where(eq(posts.id, id));
 }
 
 export async function updateOrCreatePost(fullpost: FullPost) {
@@ -87,50 +59,41 @@ export async function updateOrCreatePost(fullpost: FullPost) {
   }
 
   const postId = await db.transaction(async (tx) => {
-    if (fullpost.id !== -1) {
-      await tx.delete(postsToAuthors).where(eq(postsToAuthors.postId, fullpost.id));
-      await tx.delete(postsToTags).where(eq(postsToTags.postId, fullpost.id));
-      await tx.delete(postsToCategories).where(eq(postsToCategories.postId, fullpost.id));
-      await tx.delete(posts).where(eq(posts.id, fullpost.id));
+    const isNew = fullpost.id === -1;
+    if (!isNew) {
+      await removePost(tx, fullpost.id);
     }
-    const newPost = await tx
+    const [newPost] = await tx
       .insert(posts)
       .values({
-        id: fullpost.id === -1 ? undefined : fullpost.id,
+        id: isNew ? undefined : fullpost.id,
         title: fullpost.title,
         content: fullpost.content,
-        password: fullpost.password ? fullpost.password : undefined,
+        password: fullpost.password || undefined,
         draft: fullpost.draft,
         toc: fullpost.toc,
         math: fullpost.math,
-        ctime: fullpost.id === -1 ? undefined : new Date(fullpost.ctime),
+        ctime: isNew ? undefined : new Date(fullpost.ctime),
         visits: fullpost.visits,
       })
       .returning();
-    const postId = newPost[0].id;
-    const newAuthorRelations = fullpost.authors.map((author) => ({ postId, authorId: author.id }));
-    const newTagRelations = fullpost.tags.map((tag) => ({ postId, tagId: tag.id }));
-    const newCategoryRelations = fullpost.categories.map((category) => ({
-      postId,
-      categoryId: category.id,
-    }));
-    await tx.insert(postsToAuthors).values(newAuthorRelations);
-    if (newTagRelations.length > 0) {
-      await tx.insert(postsToTags).values(newTagRelations);
+    const postId = newPost.id;
+    await tx
+      .insert(postsToAuthors)
+      .values(fullpost.authors.map((author) => ({ postId, authorId: author.id })));
+    if (fullpost.tags.length > 0) {
+      await tx.insert(postsToTags).values(fullpost.tags.map((tag) => ({ postId, tagId: tag.id })));
     }
-    await tx.insert(postsToCategories).values(newCategoryRelations);
+    await tx
+      .insert(postsToCategories)
+      .values(fullpost.categories.map((category) => ({ postId, categoryId: category.id })));
     return postId;
   });
   return getPost(postId);
 }
 
 export async function deletePost(id: number) {
-  await db.transaction(async (tx) => {
-    await tx.delete(postsToAuthors).where(eq(postsToAuthors.postId, id));
-    await tx.delete(postsToTags).where(eq(postsToTags.postId, id));
-    await tx.delete(postsToCategories).where(eq(postsToCategories.postId, id));
-    await tx.delete(posts).where(eq(posts.id, id));
-  });
+  await db.transaction((tx) => removePost(tx, id));
 }
 
 export async function incrementVisits(id: number) {

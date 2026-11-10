@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { Avatar, Progress } from '@skeletonlabs/skeleton-svelte';
-  import { getMarkdownProcessors } from '#lib/marked.js';
+  import { Avatar } from '@skeletonlabs/skeleton-svelte';
+  import { renderMarkdown } from '#lib/marked.ts';
   import DOMPurify from 'isomorphic-dompurify';
   import CategoryBadge from '#lib/components/CategoryBadge.svelte';
 
   let { data } = $props();
   let post = $derived(data.post);
-  let { preprocess, marked, remark, rehype } = $derived(getMarkdownProcessors(post.math, post.toc));
+  let html = $derived(DOMPurify.sanitize(renderMarkdown(post.content, post.math, post.toc)));
 </script>
 
 <div
@@ -35,27 +35,10 @@
       {/each}
     </div>
     <div class="mt-5">
-      {#await marked.parse(String(remark.processSync(preprocess(post.content))))}
-        <Progress value={null}>
-          <Progress.Circle>
-            <Progress.CircleTrack />
-            <Progress.CircleRange />
-          </Progress.Circle>
-        </Progress>
-      {:then processed}
-        {#await String(rehype.processSync(processed))}
-          <Progress value={null}>
-            <Progress.Circle>
-              <Progress.CircleTrack />
-              <Progress.CircleRange />
-            </Progress.Circle>
-          </Progress>
-        {:then renderedHtml}
-          <div class="prose prose-neutral prose-invert max-w-none">
-            {@html DOMPurify.sanitize(renderedHtml)}
-          </div>
-        {/await}
-      {/await}
+      <div class="prose prose-neutral prose-invert max-w-none">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized by DOMPurify -->
+        {@html html}
+      </div>
     </div>
     <footer class="mt-15 border-t">
       <div class="mt-5 flex w-full flex-col gap-2">

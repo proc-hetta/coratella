@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { toaster, toasterOptions } from '#lib/toaster.js';
+  import { deleteResource, submitForm } from '#lib/admin.ts';
   import { m } from '#lib/paraglide/messages.js';
-  import { refreshAll } from '$app/navigation';
   import { Trash, Pencil, Circle, Plus } from '@lucide/svelte';
 
   import AdministrationCard from '#lib/components/AdministrationCard.svelte';
@@ -14,56 +13,31 @@
   let { data } = $props();
   let categories = $derived(data.categories);
 
-  async function deleteCategory(id: number) {
-    const response = await fetch(`/admin/categories/${id}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
-    if (response.ok) {
-      toaster.success({
-        title: m.success(),
-        description: m.categoryDeleted(),
-        ...toasterOptions,
-      });
-      await refreshAll();
-    } else {
-      toaster.error({
-        title: m.error(),
-        description: m.errorWhileDeleting(),
-        ...toasterOptions,
-      });
-    }
+  function deleteCategory(id: number) {
+    return deleteResource(`/admin/categories/${id}`, m.categoryDeleted());
   }
 </script>
 
 {#snippet categoryForm(categoryId: number, name: string, color: string)}
+  {@const isNew = Number.isNaN(categoryId)}
   <DialogModal
-    title={Number.isNaN(categoryId) ? m.createTag() : m.editTag()}
-    onAccept={async () => {
-      const form = document.getElementById(
-        `tag-form-${Number.isNaN(categoryId) ? 'new' : categoryId}`,
-      ) as HTMLFormElement;
-      form.requestSubmit();
-    }}
-    triggerClass="btn-icon {Number.isNaN(categoryId) ? 'w-min self-end' : ''}"
+    title={isNew ? m.createTag() : m.editTag()}
+    onAccept={() => submitForm(`category-form-${isNew ? 'new' : categoryId}`)}
+    triggerClass="btn-icon {isNew ? 'w-min self-end' : ''}"
   >
     {#snippet trigger()}
-      <Plus class={!Number.isNaN(categoryId) ? 'hidden' : ''} />
-      <Pencil class={Number.isNaN(categoryId) ? 'hidden' : ''} />
+      <Plus class={!isNew ? 'hidden' : ''} />
+      <Pencil class={isNew ? 'hidden' : ''} />
     {/snippet}
     {#snippet content()}
       <form
-        id="tag-form-{Number.isNaN(categoryId) ? 'new' : categoryId}"
+        id="category-form-{isNew ? 'new' : categoryId}"
         method="POST"
-        action={Number.isNaN(categoryId) ? '?/create' : '?/edit'}
+        action={isNew ? '?/create' : '?/edit'}
         class="flex flex-col items-center justify-center gap-2"
         use:enhance={coratellaFormCallback({
-          successMessage: Number.isNaN(categoryId)
-            ? m.tagCreationSuccessful()
-            : m.successfulModification(),
+          successMessage: isNew ? m.tagCreationSuccessful() : m.successfulModification(),
           refreshAll: true,
-          callback: async () => {},
-          preHook: () => {},
         })}
       >
         <div class="flex flex-wrap items-center justify-center gap-2">

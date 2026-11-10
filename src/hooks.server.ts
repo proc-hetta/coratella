@@ -3,7 +3,7 @@ import { PUBLIC_TITLE } from '$app/env/public';
 import * as auth from '#lib/server/auth.js';
 import { sequence, type Handle } from '@sveltejs/kit/hooks';
 import { paraglideMiddleware } from '#lib/paraglide/server.js';
-import { getMode, getTheme } from '#lib/themes.ts';
+import { defaultMode, defaultTheme } from '#lib/themes.ts';
 
 const handleParaglide: Handle = ({ event, resolve }) =>
   paraglideMiddleware(event.request, ({ request, locale }) =>
@@ -48,14 +48,14 @@ const handleTitle: Handle = ({ event, resolve }) => {
 const handleTheme: Handle = ({ event, resolve }) => {
   return resolve(event, {
     transformPageChunk: ({ html }) =>
-      html.replace('%theme%', event.cookies.get('theme') ?? getTheme()),
+      html.replace('%theme%', event.cookies.get('theme') ?? defaultTheme),
   });
 };
 
 const handleMode: Handle = ({ event, resolve }) => {
   return resolve(event, {
     transformPageChunk: ({ html }) =>
-      html.replace('%mode%', event.cookies.get('mode') ?? getMode()),
+      html.replace('%mode%', event.cookies.get('mode') ?? defaultMode),
   });
 };
 

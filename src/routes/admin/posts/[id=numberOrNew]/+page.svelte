@@ -1,20 +1,18 @@
 <script lang="ts">
   import { m } from '#lib/paraglide/messages.js';
-  import type { Author, Category, Tag } from '#lib/server/db/schema.js';
   import { Tabs } from '@skeletonlabs/skeleton-svelte';
   import DOMPurify from 'isomorphic-dompurify';
-  import { Progress } from '@skeletonlabs/skeleton-svelte';
-  import { getMarkdownProcessors } from '#lib/marked.js';
-  import { type FullPost } from '#lib/server/db/posts.js';
+  import { renderMarkdown } from '#lib/marked.ts';
+  import type { FullPost } from '#lib/server/db/posts.ts';
   import { goto, refreshAll } from '$app/navigation';
-  import { toaster, toasterOptions } from '#lib/toaster.js';
+  import { resolve } from '$app/paths';
+  import { notifyError, notifySuccess } from '#lib/toaster.ts';
   import { browser } from '$app/env';
+
+  type Option = { id: number; label: string; checked: boolean; toggle: (checked: boolean) => void };
 
   let { data } = $props();
   let sourcePost: FullPost | null = $derived(data.post);
-  let tags = $derived(data.tags);
-  let categories = $derived(data.categories);
-  let authors = $derived(data.authors);
 
   let post: FullPost = $state({
     id: -1,
@@ -44,76 +42,77 @@
     post.categories = [...sourcePost.categories];
     post.authors = [...sourcePost.authors];
   });
-  let { preprocess, marked, remark, rehype } = $derived(getMarkdownProcessors(post.math, post.toc));
 
-  let group = $state('editor');
-
-  function testTag(tag: Tag) {
-    return post.tags.some((e) => e.id == tag.id);
+  function isSelected(list: { id: number }[], item: { id: number }) {
+    return list.some((e) => e.id === item.id);
   }
 
-  function setTag(tag: Tag, checked: boolean) {
-    if (checked) {
-      post.tags.push(tag);
-    } else {
-      post.tags = post.tags.filter((e) => e.id != tag.id);
-    }
+  function toggled<T extends { id: number }>(list: T[], item: T, checked: boolean) {
+    return checked ? [...list, item] : list.filter((e) => e.id !== item.id);
   }
 
-  function testCategory(category: Category) {
-    return post.categories.some((e) => e.id == category.id);
-  }
+  let tagOptions: Option[] = $derived(
+    data.tags.map((tag) => ({
+      id: tag.id,
+      label: tag.name,
+      checked: isSelected(post.tags, tag),
+      toggle: (checked) => (post.tags = toggled(post.tags, tag, checked)),
+    })),
+  );
+  let categoryOptions: Option[] = $derived(
+    data.categories.map((category) => ({
+      id: category.id,
+      label: category.name,
+      checked: isSelected(post.categories, category),
+      toggle: (checked) => (post.categories = toggled(post.categories, category, checked)),
+    })),
+  );
+  let authorOptions: Option[] = $derived(
+    data.authors.map((author) => ({
+      id: author.id,
+      label: author.nickname,
+      checked: isSelected(post.authors, author),
+      toggle: (checked) => (post.authors = toggled(post.authors, author, checked)),
+    })),
+  );
 
-  function setCategory(category: Category, checked: boolean) {
-    if (checked) {
-      post.categories.push(category);
-    } else {
-      post.categories = post.categories.filter((e) => e.id != category.id);
-    }
-  }
-
-  function testAuthor(author: Author) {
-    return post.authors.some((e) => e.id == author.id);
-  }
-
-  function setAuthor(author: Author, checked: boolean) {
-    if (checked) {
-      post.authors.push(author);
-    } else {
-      post.authors = post.authors.filter((e) => e.id != author.id);
-    }
-  }
-
-  async function savePosts(id: number) {
-    let response;
-    if (id === -1) {
-      response = await fetch('/admin/posts', {
-        method: 'POST',
-        body: JSON.stringify(post),
-      });
-    } else {
-      response = await fetch(`/admin/posts/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(post),
-      });
-    }
+  async function save(draft: boolean) {
+    post.draft = draft;
+    const isNew = post.id === -1;
+    const response = await fetch(isNew ? '/admin/posts' : `/admin/posts/${post.id}`, {
+      method: isNew ? 'POST' : 'PUT',
+      body: JSON.stringify(post),
+    });
     if (response.ok) {
-      toaster.success({
-        title: m.success(),
-        description: m.postSaved(),
-        ...toasterOptions,
-      });
+      notifySuccess(m.postSaved());
       await refreshAll();
-      goto('/admin/posts');
+      goto(resolve('/admin/posts'));
     } else {
-      toaster.error({
-        title: m.error(),
-        description: m.errorWhileSaving(),
-        ...toasterOptions,
-      });
+      notifyError(m.errorWhileSaving());
     }
   }
 </script>
+
+{#snippet selection(legend: string, options: Option[])}
+  <fieldset class="col-span-full">
+    <legend class="label-text">{legend}</legend>
+    <div class="col-span-full columns-3xs">
+      {#each options as option (option.id)}
+        <label class="flex items-center space-x-2">
+          <input
+            class="checkbox"
+            type="checkbox"
+            checked={option.checked}
+            onchange={(e) => option.toggle(e.currentTarget.checked)}
+          />
+          <p>
+            {option.label}
+          </p>
+        </label>
+      {/each}
+    </div>
+  </fieldset>
+{/snippet}
 
 <div class="flex flex-col items-center gap-2">
   <div class="card md:preset-filled-surface-100-900 w-full p-4 text-center">
@@ -148,84 +147,21 @@
           <input bind:checked={post.math} class="checkbox" type="checkbox" />
         </label>
       </div>
-      <fieldset class="col-span-full">
-        <legend class="label-text">{m.tags()}</legend>
-        <div class="col-span-full columns-3xs">
-          {#each tags as tag (tag.id)}
-            <label class="flex items-center space-x-2">
-              <input
-                class="checkbox"
-                type="checkbox"
-                checked={testTag(tag)}
-                onchange={(e) => setTag(tag, e.currentTarget.checked)}
-              />
-              <p>
-                {tag.name}
-              </p>
-            </label>
-          {/each}
-        </div>
-      </fieldset>
-      <fieldset class="col-span-full">
-        <legend class="label-text">{m.categories()}</legend>
-        <div class="col-span-full columns-3xs">
-          {#each categories as category (category.id)}
-            <label class="flex items-center space-x-2">
-              <input
-                class="checkbox"
-                type="checkbox"
-                checked={testCategory(category)}
-                onchange={(e) => setCategory(category, e.currentTarget.checked)}
-              />
-              <p>
-                {category.name}
-              </p>
-            </label>
-          {/each}
-        </div>
-      </fieldset>
-      <fieldset class="col-span-full">
-        <legend class="label-text">{m.authors()}</legend>
-        <div class="col-span-full columns-3xs">
-          {#each authors as author (author.id)}
-            <label class="flex items-center space-x-2">
-              <input
-                class="checkbox"
-                type="checkbox"
-                checked={testAuthor(author)}
-                onchange={(e) => setAuthor(author, e.currentTarget.checked)}
-              />
-              <p>
-                {author.nickname}
-              </p>
-            </label>
-          {/each}
-        </div>
-      </fieldset>
+      {@render selection(m.tags(), tagOptions)}
+      {@render selection(m.categories(), categoryOptions)}
+      {@render selection(m.authors(), authorOptions)}
       <div>
-        <button
-          class="btn preset-filled-primary-500"
-          onclick={(_) => {
-            post.draft = true;
-            savePosts(post.id);
-          }}
-        >
+        <button class="btn preset-filled-primary-500" onclick={() => save(true)}>
           {m.saveAsDraft()}
         </button>
-        <button
-          class="btn preset-filled-primary-500"
-          onclick={(_) => {
-            post.draft = false;
-            savePosts(post.id);
-          }}
-        >
+        <button class="btn preset-filled-primary-500" onclick={() => save(false)}>
           {m.save()}
         </button>
       </div>
     </form>
   </div>
 
-  <Tabs defaultValue={group} onValueChange={(e) => (group = e.value)}>
+  <Tabs defaultValue="editor">
     <Tabs.List>
       <Tabs.Trigger value="editor">Editor</Tabs.Trigger>
       <Tabs.Trigger value="preview">Preview</Tabs.Trigger>
@@ -236,15 +172,10 @@
     >
     <Tabs.Content value="preview">
       {#if browser}
-        {#await rehype.processSync(String(marked.parse(String(remark.processSync(preprocess(post.content))))))}
-          <Progress value={null} />
-        {:then processed}
-          <div class="prose prose-neutral prose-invert max-w-none">
-            {@html DOMPurify.sanitize(String(processed))}
-          </div>
-        {:catch e}
-          <h1 class="h1">{m.error()}</h1>
-        {/await}
+        <div class="prose prose-neutral prose-invert max-w-none">
+          <!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized by DOMPurify -->
+          {@html DOMPurify.sanitize(renderMarkdown(post.content, post.math, post.toc))}
+        </div>
       {/if}
     </Tabs.Content>
   </Tabs>

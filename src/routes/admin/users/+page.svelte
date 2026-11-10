@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { goto, refreshAll } from '$app/navigation';
-  import { toaster, toasterOptions } from '#lib/toaster.ts';
+  import { deleteResource, submitForm } from '#lib/admin.ts';
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import { m } from '#lib/paraglide/messages.js';
   import { Trash, Pencil, Plus } from '@lucide/svelte';
   import AdministrationCard from '#lib/components/AdministrationCard.svelte';
@@ -12,54 +13,31 @@
   let users = $derived(data.users);
   let user = $derived(data.user);
 
-  async function deleteUser(id: string) {
-    const response = await fetch(`/admin/users/${id}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
-    if (response.ok) {
-      toaster.success({
-        title: m.success(),
-        description: m.userDeleted(),
-        ...toasterOptions,
-      });
-      await refreshAll();
-    } else {
-      toaster.error({
-        title: m.error(),
-        description: m.errorWhileDeleting(),
-        ...toasterOptions,
-      });
-    }
+  function deleteUser(id: string) {
+    return deleteResource(`/admin/users/${id}`, m.userDeleted());
   }
 </script>
 
 {#snippet userForm(userId: string | null, username: string)}
+  {@const isNew = userId === null}
   <DialogModal
-    title={userId === null ? m.createUser() : m.editUser()}
-    onAccept={async () => {
-      const form = document.getElementById(
-        `user-form-${userId === null ? 'new' : userId}`,
-      ) as HTMLFormElement;
-      form.requestSubmit();
-    }}
-    triggerClass="btn-icon {userId === null ? 'w-min self-end' : ''}"
+    title={isNew ? m.createUser() : m.editUser()}
+    onAccept={() => submitForm(`user-form-${isNew ? 'new' : userId}`)}
+    triggerClass="btn-icon {isNew ? 'w-min self-end' : ''}"
   >
     {#snippet trigger()}
-      <Plus class={userId !== null ? 'hidden' : ''} />
-      <Pencil class={userId === null ? 'hidden' : ''} />
+      <Plus class={!isNew ? 'hidden' : ''} />
+      <Pencil class={isNew ? 'hidden' : ''} />
     {/snippet}
     {#snippet content()}
       <form
-        id="user-form-{userId === null ? 'new' : userId}"
+        id="user-form-{isNew ? 'new' : userId}"
         method="POST"
-        action={userId === null ? '?/create' : '?/edit'}
+        action={isNew ? '?/create' : '?/edit'}
         class="flex flex-col items-center justify-center gap-2"
         use:enhance={coratellaFormCallback({
-          successMessage: userId === null ? m.userCreationSuccessful() : m.successfulModification(),
+          successMessage: isNew ? m.userCreationSuccessful() : m.successfulModification(),
           refreshAll: true,
-          callback: async () => {},
-          preHook: () => {},
         })}
       >
         <div class="flex flex-wrap items-center justify-center gap-2">
@@ -98,7 +76,9 @@
           <td class="text-right">
             <div class="flex flex-row justify-end">
               {#if row.id === user.id}
-                <button class="btn-icon" onclick={() => goto('/admin/profile')}><Pencil /></button>
+                <button class="btn-icon" onclick={() => goto(resolve('/admin/profile'))}
+                  ><Pencil /></button
+                >
               {:else}
                 {@render userForm(row.id, row.username)}
               {/if}

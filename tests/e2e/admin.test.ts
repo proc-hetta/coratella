@@ -209,7 +209,7 @@ test('posts: saving without authors or categories fails', async ({ page }) => {
   await expect(page).toHaveURL('/admin/posts/new?title=orphan&password=');
 });
 
-test('posts: confirming deletion from the list keeps the post (known bug)', async ({ page }) => {
+test('posts: delete from the list', async ({ page }) => {
   await seedPost({ title: 'sticky', content: 'x' });
   await login(page);
   await page.goto('/admin/posts');
@@ -217,8 +217,8 @@ test('posts: confirming deletion from the list keeps the post (known bug)', asyn
   await row.getByRole('button').last().click();
   await expect(dialog(page).getByText('Do you want to delete sticky?')).toBeVisible();
   await confirm(page);
-  await page.reload();
-  await expect(row).toHaveCount(1);
+  await toast(page, 'Post deleted');
+  await expect(row).toHaveCount(0);
 });
 
 test('theme switcher updates attributes and cookies', async ({ page, context }) => {

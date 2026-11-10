@@ -6,33 +6,31 @@
   let selectedMode = $derived(getMode());
 </script>
 
+{#snippet choices(options: string[], selected: string, select: (value: string) => void)}
+  {#each options as option (option)}
+    <button
+      class={`chip capitalize ${option === selected ? 'preset-filled' : 'preset-tonal'}`}
+      onclick={() => {
+        select(option);
+        refreshAll();
+      }}
+    >
+      <span>{option}</span>
+    </button>
+  {/each}
+{/snippet}
+
 <div class="z-50 grid grid-rows-2 gap-8">
   <div class="bg-surface-100-900 grid grid-cols-3 gap-2">
-    {#each modes as mode (mode)}
-      <button
-        class={`chip capitalize ${mode === selectedMode ? 'preset-filled' : 'preset-tonal'}`}
-        onclick={async () => {
-          selectedMode = mode;
-          setMode(selectedMode);
-          refreshAll();
-        }}
-      >
-        <span>{mode}</span>
-      </button>
-    {/each}
+    {@render choices(modes, selectedMode, (mode) => {
+      selectedMode = mode;
+      setMode(mode);
+    })}
   </div>
   <div class="grid grid-cols-3 gap-2">
-    {#each themes as theme (theme)}
-      <button
-        class={`chip capitalize ${theme === selectedTheme ? 'preset-filled' : 'preset-tonal'}`}
-        onclick={async () => {
-          selectedTheme = theme;
-          setTheme(selectedTheme);
-          refreshAll();
-        }}
-      >
-        <span>{theme}</span>
-      </button>
-    {/each}
+    {@render choices(themes, selectedTheme, (theme) => {
+      selectedTheme = theme;
+      setTheme(theme);
+    })}
   </div>
 </div>

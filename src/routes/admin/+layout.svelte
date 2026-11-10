@@ -10,15 +10,16 @@
     Paintbrush,
   } from '@lucide/svelte';
   import { m } from '#lib/paraglide/messages.js';
+  import { resolve } from '$app/paths';
   import ThemeSwitcher from '#lib/components/ThemeSwitcher.svelte';
 
   let { children, data } = $props();
   let sections = $derived([
-    { title: m.posts(), href: '/admin/posts', icon: Book },
-    { title: m.tags(), href: '/admin/tags', icon: Tag },
-    { title: m.categories(), href: '/admin/categories', icon: ChartColumnStacked },
-    { title: m.users(), href: '/admin/users', icon: User },
-    { title: m.authors(), href: '/admin/authors', icon: BookHeart },
+    { title: m.posts(), href: resolve('/admin/posts'), icon: Book },
+    { title: m.tags(), href: resolve('/admin/tags'), icon: Tag },
+    { title: m.categories(), href: resolve('/admin/categories'), icon: ChartColumnStacked },
+    { title: m.users(), href: resolve('/admin/users'), icon: User },
+    { title: m.authors(), href: resolve('/admin/authors'), icon: BookHeart },
   ]);
 </script>
 
@@ -29,11 +30,11 @@
         <AppBar.Toolbar class="grid-cols-[auto_auto]">
           <AppBar.Lead>
             <div class="flex flex-row gap-4">
-              <a class="flex items-center" href="/admin#">
+              <a class="flex items-center" href="{resolve('/admin')}#">
                 <img class="h-10" src={data.logo} alt="logo" />
               </a>
               <div class="max-lg:hidden">
-                {#each sections as section}
+                {#each sections as section (section.href)}
                   <a class="btn hover:preset-tonal" href={section.href}>{section.title}</a>
                 {/each}
               </div>
@@ -52,9 +53,11 @@
                 </Popover.Positioner>
               </Portal>
             </Popover>
-            <a href="/admin/profile" class="btn preset-tonal-surface-900">{data.user.username}</a>
+            <a href={resolve('/admin/profile')} class="btn preset-tonal-surface-900"
+              >{data.user.username}</a
+            >
             <div class="flex items-center">
-              <a href="/logout" class="btn-icon">
+              <a href={resolve('/(non-admin)/logout')} class="btn-icon">
                 <LogOut />
               </a>
             </div>
@@ -70,7 +73,7 @@
   <div class="sticky bottom-0 lg:hidden">
     <Navigation layout="bar">
       <Navigation.Menu>
-        {#each sections as section}
+        {#each sections as section (section.href)}
           {@const Icon = section.icon}
           <Navigation.TriggerAnchor class="flex-auto" href={section.href}>
             <Icon class="size-5" />

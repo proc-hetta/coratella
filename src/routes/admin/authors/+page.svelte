@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { toaster, toasterOptions } from '#lib/toaster.js';
+  import { deleteResource, submitForm } from '#lib/admin.ts';
+  import { notifyError } from '#lib/toaster.ts';
   import { m } from '#lib/paraglide/messages.js';
-  import { refreshAll } from '$app/navigation';
   import { Trash, Pencil, Plus } from '@lucide/svelte';
 
   import AdministrationCard from '#lib/components/AdministrationCard.svelte';
@@ -18,25 +18,28 @@
   let imageFile: File | null = $state(null);
   let profileImage: string | null = $state(null);
 
-  async function deleteAuthor(id: number) {
-    const response = await fetch(`/admin/authors/${id}`, {
-      method: 'DELETE',
+  /** Uploads the selected image, returning its URL, or `null` after notifying a failure. */
+  async function uploadImage(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch('/admin/files', {
+      method: 'POST',
+      body: formData,
       credentials: 'include',
     });
-    if (response.ok) {
-      toaster.success({
-        title: m.success(),
-        description: m.authorDeleted(),
-        ...toasterOptions,
-      });
-      await refreshAll();
-    } else {
-      toaster.error({
-        title: m.error(),
-        description: m.errorWhileDeleting(),
-        ...toasterOptions,
-      });
+    if (response.status === 401) {
+      notifyError(m.errorNoTorcoloAuth());
+      return null;
     }
+    if (!response.ok) {
+      notifyError(String(response.status));
+      return null;
+    }
+    return response.headers.get('Location')!;
+  }
+
+  function deleteAuthor(id: number) {
+    return deleteResource(`/admin/authors/${id}`, m.authorDeleted());
   }
 </script>
 
@@ -48,64 +51,38 @@
   image: string | null,
   email: string | null,
 )}
+  {@const isNew = Number.isNaN(authorId)}
   <DialogModal
-    title={Number.isNaN(authorId) ? m.createAuthor() : m.editAuthor()}
+    title={isNew ? m.createAuthor() : m.editAuthor()}
     onAccept={async () => {
       if (imageFile) {
-        let formData = new FormData();
-        formData.append('file', imageFile);
-        const response = await fetch('/admin/files', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-        });
-        if (response.status == 401) {
-          toaster.error({
-            title: m.error(),
-            description: m.errorNoTorcoloAuth(),
-            ...toasterOptions,
-          });
-          return;
-        }
-        if (!response.ok) {
-          toaster.error({
-            title: m.error(),
-            description: response.status,
-            ...toasterOptions,
-          });
-          return;
-        }
-        profileImage = await response.headers.get('Location')!;
+        const url = await uploadImage(imageFile);
+        if (url === null) return;
+        profileImage = url;
         await tick();
       }
 
-      const form = document.getElementById(
-        `tag-form-${Number.isNaN(authorId) ? 'new' : authorId}`,
-      ) as HTMLFormElement;
-      form.requestSubmit();
+      submitForm(`author-form-${isNew ? 'new' : authorId}`);
     }}
-    triggerClass="btn-icon {Number.isNaN(authorId) ? 'w-min self-end' : ''}"
+    triggerClass="btn-icon {isNew ? 'w-min self-end' : ''}"
     onClick={() => {
-      ((profileImage = image), (imageFile = null));
+      profileImage = image;
+      imageFile = null;
     }}
   >
     {#snippet trigger()}
-      <Plus class={!Number.isNaN(authorId) ? 'hidden' : ''} />
-      <Pencil class={Number.isNaN(authorId) ? 'hidden' : ''} />
+      <Plus class={!isNew ? 'hidden' : ''} />
+      <Pencil class={isNew ? 'hidden' : ''} />
     {/snippet}
     {#snippet content()}
       <form
-        id="tag-form-{Number.isNaN(authorId) ? 'new' : authorId}"
+        id="author-form-{isNew ? 'new' : authorId}"
         method="POST"
-        action={Number.isNaN(authorId) ? '?/create' : '?/edit'}
+        action={isNew ? '?/create' : '?/edit'}
         class="flex flex-col items-center justify-center gap-2"
         use:enhance={coratellaFormCallback({
-          successMessage: Number.isNaN(authorId)
-            ? m.authorCreationSuccessful()
-            : m.successfulModification(),
+          successMessage: isNew ? m.authorCreationSuccessful() : m.successfulModification(),
           refreshAll: true,
-          callback: async () => {},
-          preHook: () => {},
         })}
       >
         <div class="size-64">

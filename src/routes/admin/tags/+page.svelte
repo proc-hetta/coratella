@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { toaster, toasterOptions } from '#lib/toaster.js';
+  import { deleteResource, submitForm } from '#lib/admin.ts';
   import { m } from '#lib/paraglide/messages.js';
-  import { refreshAll } from '$app/navigation';
   import { Trash, Pencil, Plus } from '@lucide/svelte';
 
   import AdministrationCard from '#lib/components/AdministrationCard.svelte';
@@ -12,56 +11,31 @@
   let { data } = $props();
   let tags = $derived(data.tags);
 
-  async function deleteTag(id: number) {
-    const response = await fetch(`/admin/tags/${id}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
-    if (response.ok) {
-      toaster.success({
-        title: m.success(),
-        description: m.tagDeleted(),
-        ...toasterOptions,
-      });
-      await refreshAll();
-    } else {
-      toaster.error({
-        title: m.error(),
-        description: m.errorWhileDeleting(),
-        ...toasterOptions,
-      });
-    }
+  function deleteTag(id: number) {
+    return deleteResource(`/admin/tags/${id}`, m.tagDeleted());
   }
 </script>
 
 {#snippet tagForm(tagId: number, name: string)}
+  {@const isNew = Number.isNaN(tagId)}
   <DialogModal
-    title={Number.isNaN(tagId) ? m.createTag() : m.editTag()}
-    onAccept={async () => {
-      const form = document.getElementById(
-        `tag-form-${Number.isNaN(tagId) ? 'new' : tagId}`,
-      ) as HTMLFormElement;
-      form.requestSubmit();
-    }}
-    triggerClass="btn-icon {Number.isNaN(tagId) ? 'w-min self-end' : ''}"
+    title={isNew ? m.createTag() : m.editTag()}
+    onAccept={() => submitForm(`tag-form-${isNew ? 'new' : tagId}`)}
+    triggerClass="btn-icon {isNew ? 'w-min self-end' : ''}"
   >
     {#snippet trigger()}
-      <Plus class={!Number.isNaN(tagId) ? 'hidden' : ''} />
-      <Pencil class={Number.isNaN(tagId) ? 'hidden' : ''} />
+      <Plus class={!isNew ? 'hidden' : ''} />
+      <Pencil class={isNew ? 'hidden' : ''} />
     {/snippet}
     {#snippet content()}
       <form
-        id="tag-form-{Number.isNaN(tagId) ? 'new' : tagId}"
+        id="tag-form-{isNew ? 'new' : tagId}"
         method="POST"
-        action={Number.isNaN(tagId) ? '?/create' : '?/edit'}
+        action={isNew ? '?/create' : '?/edit'}
         class="flex flex-col items-center justify-center gap-2"
         use:enhance={coratellaFormCallback({
-          successMessage: Number.isNaN(tagId)
-            ? m.tagCreationSuccessful()
-            : m.successfulModification(),
+          successMessage: isNew ? m.tagCreationSuccessful() : m.successfulModification(),
           refreshAll: true,
-          callback: async () => {},
-          preHook: () => {},
         })}
       >
         <div class="flex flex-wrap items-center justify-center gap-2">
