@@ -1,0 +1,74 @@
+import { test, expect, seedPost, visitsOf } from './fixtures';
+
+test('fills html placeholders from defaults', async ({ page }) => {
+  const response = await page.request.get('/');
+  const html = await response.text();
+  expect(html).toContain('<html data-theme="wintry" data-mode="system" lang="en">');
+  expect(html).toContain('<title>E2E Title</title>');
+});
+
+test('fills html placeholders from cookies', async ({ page }) => {
+  const response = await page.request.get('/', {
+    headers: { cookie: 'theme=rose; mode=dark; PARAGLIDE_LOCALE=it' },
+  });
+  expect(await response.text()).toContain('<html data-theme="rose" data-mode="dark" lang="it">');
+});
+
+test('home lists only published posts, newest first', async ({ page }) => {
+  await seedPost({ title: 'older', content: 'a', ctime: '2024-01-01T00:00:00Z' });
+  await seedPost({ title: 'newer', content: 'b', ctime: '2024-06-01T00:00:00Z' });
+  await seedPost({ title: 'hidden', content: 'c', draft: true });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('E2E Title');
+  await expect(page.getByRole('heading', { level: 3 })).toHaveText(['newer', 'older']);
+  await expect(page.getByText('#tag-newer').first()).toBeAttached();
+  await expect(page.getByText('cat-newer').first()).toBeAttached();
+});
+
+test('renders a post and counts the visit', async ({ page }) => {
+  const id = await seedPost({
+    title: 'rendered',
+    content:
+      '# Heading\n\n## Table of contents\n\n## Sub\n\nSome **bold** and $x^2$.\n\n```ts\nconst a = 1;\n```',
+  });
+  await page.goto(`/posts/${id}`);
+  await expect(page.getByRole('heading', { level: 2, name: 'rendered' })).toBeVisible();
+  const prose = page.locator('.prose');
+  await expect(prose.getByRole('heading', { level: 1, name: 'Heading' })).toBeVisible();
+  await expect(prose.locator('strong')).toHaveText('bold');
+  await expect(prose.locator('.katex').first()).toBeAttached();
+  // With math enabled the code block is not highlighted
+  await expect(prose.locator('code.language-ts:not(.hljs)')).toBeAttached();
+  await expect(prose.getByRole('link', { name: 'Sub' })).toHaveAttribute('href', '#sub');
+  await expect(page.getByRole('link', { name: 'rendered@example.com' })).toHaveAttribute(
+    'href',
+    'mailto:rendered@example.com',
+  );
+  await expect(page.getByText('#tag-rendered')).toBeVisible();
+  expect(await visitsOf(id)).toBeGreaterThanOrEqual(1);
+});
+
+test('protects posts with a password', async ({ page }) => {
+  const id = await seedPost({ title: 'secret', content: 'hidden body', password: 'pw' });
+  await page.goto(`/posts/${id}`);
+  await expect(page).toHaveURL(`/password?post=${id}`);
+  await page.getByPlaceholder('Password').fill('pw');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page).toHaveURL(`/posts/${id}?password=pw`);
+  await expect(page.getByText('hidden body')).toBeVisible();
+});
+
+test('password page without post redirects home', async ({ page }) => {
+  await page.goto('/password');
+  await expect(page).toHaveURL('/');
+});
+
+test('missing post answers 404', async ({ page }) => {
+  const response = await page.goto('/posts/999');
+  expect(response?.status()).toBe(404);
+});
+
+test('admin requires a session', async ({ page }) => {
+  await page.goto('/admin/tags');
+  await expect(page).toHaveURL('/login');
+});
