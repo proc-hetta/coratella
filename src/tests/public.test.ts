@@ -70,7 +70,6 @@ describe('home page', () => {
       categories: [{ id: 1, name: 'cat', color: null }],
       authors: [{ id: 1, nickname: 'nick', firstName: null, lastName: null, image: null }],
     });
-    expect(data).toMatchObject({ logo: '/logolight.svg' });
   });
 
   it('never exposes passwords, drafts or post content', async () => {
@@ -89,13 +88,6 @@ describe('home page', () => {
     for (const secret of ['secret-pw', 'secret-body', 'secret-draft', '"password"', '"draft"']) {
       expect(serialized).not.toContain(secret);
     }
-  });
-
-  it('uses the dark logo when the mode cookie is dark', async () => {
-    const { cookies } = cookieJar({ mode: 'dark' });
-    expect(((await call(homePage.load, { cookies })) as { logo: string }).logo).toBe(
-      '/logodark.svg',
-    );
   });
 });
 

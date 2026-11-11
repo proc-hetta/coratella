@@ -1,5 +1,6 @@
 <script lang="ts">
   import CategoryBadge from '#lib/components/CategoryBadge.svelte';
+  import Logo from '#lib/components/Logo.svelte';
   import { Avatar } from '@skeletonlabs/skeleton-svelte';
   import { resolve } from '$app/paths';
   import { PUBLIC_TITLE } from '$app/env/public';
@@ -13,7 +14,7 @@
 <div>
   <div>
     <a class="flex w-full items-center justify-center" href={resolve('/(non-admin)')}>
-      <img class="" src={data.logo} alt="Coratella Logo" />
+      <Logo alt="Coratella Logo" />
     </a>
     <h1 class="h1 mb-10 text-center">{PUBLIC_TITLE}</h1>
   </div>

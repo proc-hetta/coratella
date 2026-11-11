@@ -12,6 +12,7 @@
   import { m } from '#lib/paraglide/messages.js';
   import { resolve } from '$app/paths';
   import ThemeSwitcher from '#lib/components/ThemeSwitcher.svelte';
+  import Logo from '#lib/components/Logo.svelte';
 
   let { children, data } = $props();
   let sections = $derived([
@@ -31,7 +32,7 @@
           <AppBar.Lead>
             <div class="flex flex-row gap-4">
               <a class="flex items-center" href="{resolve('/admin')}#">
-                <img class="h-10" src={data.logo} alt="logo" />
+                <Logo class="h-10" alt="logo" />
               </a>
               <div class="max-lg:hidden">
                 {#each sections as section (section.href)}

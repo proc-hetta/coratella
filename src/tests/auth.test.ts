@@ -101,10 +101,6 @@ describe('login and logout', () => {
     }
   });
 
-  it('exposes the logo on the login page', async () => {
-    expect(await call(loginPage.load, {})).toEqual({ logo: '/logolight.svg' });
-  });
-
   it('logs out by deleting the cookie and redirecting to login', async () => {
     const { cookies, operations } = cookieJar({ 'auth-session': 'x' });
     const result = await thrown(() => call(logout.POST, { cookies }));
@@ -114,21 +110,11 @@ describe('login and logout', () => {
 });
 
 describe('admin shell', () => {
-  it('exposes reduced user and mode-dependent logo', async () => {
+  it('exposes the reduced user', async () => {
     const [user] = await createUser('u', 'p');
-    const light = cookieJar();
-    expect(await call(adminLayout.load, { locals: { user }, cookies: light.cookies })).toEqual({
+    expect(await call(adminLayout.load, { locals: { user } })).toEqual({
       user: { id: user.id, username: 'u' },
-      logo: '/logolight.svg',
     });
-    const dark = cookieJar({ mode: 'dark' });
-    expect(
-      (
-        (await call(adminLayout.load, { locals: { user }, cookies: dark.cookies })) as {
-          logo: string;
-        }
-      ).logo,
-    ).toBe('/logodark.svg');
   });
 
   it('computes dashboard counters', async () => {

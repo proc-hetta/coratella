@@ -3,7 +3,7 @@ import { test, expect, seedPost, visitsOf } from './fixtures';
 test('fills html placeholders from defaults', async ({ page }) => {
   const response = await page.request.get('/');
   const html = await response.text();
-  expect(html).toContain('<html data-theme="wintry" data-mode="system" lang="en">');
+  expect(html).toContain('<html data-theme="wintry" data-mode="dark" lang="en">');
   expect(html).toContain('<title>E2E Title</title>');
 });
 
@@ -20,7 +20,7 @@ test('tampered theme and mode cookies fall back to the defaults', async ({ page 
     headers: { cookie: `theme=${payload}; mode=${payload}` },
   });
   const html = await response.text();
-  expect(html).toContain('<html data-theme="wintry" data-mode="system" lang="en">');
+  expect(html).toContain('<html data-theme="wintry" data-mode="dark" lang="en">');
   expect(html).not.toContain('__injected');
 
   await page.context().addCookies([
@@ -107,9 +107,18 @@ test('hovering a post link does not count a visit', async ({ page }) => {
   expect(await visitsOf(id)).toBe(0);
 });
 
-test('system mode follows the operating system color scheme', async ({ page }) => {
+test('dark mode is the default, system mode follows the operating system', async ({
+  page,
+  context,
+}) => {
   const colorScheme = () =>
     page.evaluate(() => getComputedStyle(document.documentElement).colorScheme);
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
+  expect(await colorScheme()).toBe('dark');
+
+  await context.addCookies([{ name: 'mode', value: 'system', url: 'http://localhost:4173' }]);
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'system');
@@ -131,4 +140,27 @@ test('missing post answers 404', async ({ page }) => {
 test('admin requires a session', async ({ page }) => {
   await page.goto('/admin/tags');
   await expect(page).toHaveURL('/login');
+});
+
+test('the logo follows the color mode', async ({ page, context }) => {
+  // Index of the visible logo: 0 for light, 1 for dark
+  const visibleLogo = async () => {
+    const logos = page.locator('img[alt="Coratella Logo"]');
+    await expect(logos).toHaveCount(2);
+    return (await logos.evaluateAll((imgs) => imgs.map((img) => img.checkVisibility()))).indexOf(
+      true,
+    );
+  };
+  await page.emulateMedia({ colorScheme: 'dark' });
+  for (const [mode, expected] of [
+    ['light', 0],
+    ['dark', 1],
+    ['system', 1],
+  ] as const) {
+    await context.addCookies([{ name: 'mode', value: mode, url: 'http://localhost:4173' }]);
+    await page.goto('/');
+    expect(await visibleLogo(), mode).toBe(expected);
+  }
+  await page.emulateMedia({ colorScheme: 'light' });
+  expect(await visibleLogo(), 'system, light OS').toBe(0);
 });

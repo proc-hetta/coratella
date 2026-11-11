@@ -2,7 +2,7 @@ import { browser } from '$app/env';
 
 export const defaultTheme = 'wintry';
 export const themes = ['wintry', 'reign', 'mint', 'rose', 'pine', 'cerberus'];
-export const defaultMode = 'system';
+export const defaultMode = 'dark';
 export const modes = ['system', 'dark', 'light'];
 
 /** One year: preferences survive browser restarts. */

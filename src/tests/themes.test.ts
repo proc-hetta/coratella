@@ -11,7 +11,7 @@ describe('theme and mode allow-lists', () => {
     'falls back to the default for %j',
     (value) => {
       expect(themeOrDefault(value)).toBe('wintry');
-      expect(modeOrDefault(value)).toBe('system');
+      expect(modeOrDefault(value)).toBe('dark');
     },
   );
 });
