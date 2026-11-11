@@ -42,6 +42,15 @@ describe('admin authors', () => {
     ]);
   });
 
+  it('creates several authors without an email', async () => {
+    for (const nickname of ['a', 'b']) {
+      expect(
+        await call(authorsPage.actions.create, { request: formRequest({ nickname, email: '' }) }),
+      ).toBeUndefined();
+    }
+    expect(await getAuthors()).toHaveLength(2);
+  });
+
   it('stores missing optional fields as null', async () => {
     await call(authorsPage.actions.create, { request: formRequest({ nickname: 'n' }) });
     expect(await getAuthors()).toEqual([
