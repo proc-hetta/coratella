@@ -2,10 +2,12 @@
   import { m } from '#lib/paraglide/messages.js';
   import { Dialog, Progress, Portal } from '@skeletonlabs/skeleton-svelte';
 
+  // `form`: id of a form to submit on confirm; otherwise `onAccept` runs.
   let {
     title,
     content,
-    onAccept,
+    form = undefined,
+    onAccept = async () => {},
     trigger,
     triggerClass,
     triggerDisabled = false,
@@ -37,10 +39,12 @@
             >{m.abort()}</Dialog.CloseTrigger
           >
           <button
-            type="button"
+            type={form ? 'submit' : 'button'}
+            {form}
             disabled={running}
             class="btn preset-filled-primary-500"
             onclick={async () => {
+              if (form) return;
               running = true;
               await onAccept();
               running = false;

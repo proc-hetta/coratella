@@ -12,8 +12,3 @@ export async function deleteResource(url: string, successMessage: string) {
     notifyError(m.errorWhileDeleting());
   }
 }
-
-/** Submits the form with the given id, running its `use:enhance` handler. */
-export function submitForm(id: string) {
-  (document.getElementById(id) as HTMLFormElement).requestSubmit();
-}

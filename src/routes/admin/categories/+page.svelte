@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { deleteResource, submitForm } from '#lib/admin.ts';
+  import { deleteResource } from '#lib/admin.ts';
   import { m } from '#lib/paraglide/messages.js';
   import { Trash, Pencil, Circle, Plus } from '@lucide/svelte';
 
@@ -22,7 +22,7 @@
   {@const isNew = Number.isNaN(categoryId)}
   <DialogModal
     title={isNew ? m.createTag() : m.editTag()}
-    onAccept={() => submitForm(`category-form-${isNew ? 'new' : categoryId}`)}
+    form={`category-form-${isNew ? 'new' : categoryId}`}
     triggerClass="btn-icon {isNew ? 'w-min self-end' : ''}"
   >
     {#snippet trigger()}

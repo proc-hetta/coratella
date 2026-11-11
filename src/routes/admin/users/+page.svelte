@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { deleteResource, submitForm } from '#lib/admin.ts';
+  import { deleteResource } from '#lib/admin.ts';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { m } from '#lib/paraglide/messages.js';
@@ -22,7 +22,7 @@
   {@const isNew = userId === null}
   <DialogModal
     title={isNew ? m.createUser() : m.editUser()}
-    onAccept={() => submitForm(`user-form-${isNew ? 'new' : userId}`)}
+    form={`user-form-${isNew ? 'new' : userId}`}
     triggerClass="btn-icon {isNew ? 'w-min self-end' : ''}"
   >
     {#snippet trigger()}

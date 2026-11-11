@@ -1,10 +1,13 @@
 import type { SubmitFunction } from '$app/forms';
+
+type SubmitInput = Parameters<SubmitFunction>[0];
 import { notifyError, notifySuccess } from '#lib/toaster.ts';
 import { m } from '#lib/paraglide/messages.js';
 
 /**
  * `use:enhance` handler for admin forms: shows a success or error toast, then applies the default
- * update without resetting the form. `preHook` runs on submit, `callback` once the result is known.
+ * update without resetting the form. `preHook` runs on submit (it may edit `formData` or `cancel()`),
+ * `callback` once the result is known.
  */
 export function coratellaFormCallback({
   successMessage,
@@ -15,10 +18,10 @@ export function coratellaFormCallback({
   successMessage: string;
   refreshAll: boolean;
   callback?: () => Promise<void>;
-  preHook?: () => void;
+  preHook?: (input: SubmitInput) => void | Promise<void>;
 }): SubmitFunction {
-  return () => {
-    preHook();
+  return async (input) => {
+    await preHook(input);
     return async ({ result, update }) => {
       if (result.type === 'success' || result.type === 'redirect') {
         notifySuccess(successMessage);

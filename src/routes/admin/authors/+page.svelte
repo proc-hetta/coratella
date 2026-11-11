@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { deleteResource, submitForm } from '#lib/admin.ts';
+  import { deleteResource } from '#lib/admin.ts';
   import { notifyError } from '#lib/toaster.ts';
   import { m } from '#lib/paraglide/messages.js';
   import { Trash, Pencil, Plus } from '@lucide/svelte';
@@ -10,7 +10,6 @@
   import { coratellaFormCallback } from '#lib/utils.ts';
   import { enhance } from '$app/forms';
   import ImageFrame from '#lib/components/ImageFrame.svelte';
-  import { tick } from 'svelte';
 
   let { data } = $props();
   let authors = $derived(data.authors);
@@ -54,16 +53,7 @@
   {@const isNew = Number.isNaN(authorId)}
   <DialogModal
     title={isNew ? m.createAuthor() : m.editAuthor()}
-    onAccept={async () => {
-      if (imageFile) {
-        const url = await uploadImage(imageFile);
-        if (url === null) return;
-        profileImage = url;
-        await tick();
-      }
-
-      submitForm(`author-form-${isNew ? 'new' : authorId}`);
-    }}
+    form={`author-form-${isNew ? 'new' : authorId}`}
     triggerClass="btn-icon {isNew ? 'w-min self-end' : ''}"
     onClick={() => {
       profileImage = image;
@@ -83,6 +73,13 @@
         use:enhance={coratellaFormCallback({
           successMessage: isNew ? m.authorCreationSuccessful() : m.successfulModification(),
           refreshAll: true,
+          preHook: async ({ formData, cancel }) => {
+            if (!imageFile) return;
+            const url = await uploadImage(imageFile);
+            if (url === null) return cancel();
+            profileImage = url;
+            formData.set('image', url);
+          },
         })}
       >
         <div class="size-64">

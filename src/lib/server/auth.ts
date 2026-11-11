@@ -13,7 +13,7 @@ export async function generateSessionToken(user: table.User) {
   const token = await new jose.SignJWT({})
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('24h')
-    .setIssuedAt(Math.floor(Date.now() / 1000))
+    .setIssuedAt()
     .setSubject(user.id)
     .sign(sessionCookieKey);
   const payload = jose.decodeJwt(token);
@@ -23,19 +23,11 @@ export async function generateSessionToken(user: table.User) {
 
 export async function validateSessionToken(token: string) {
   let payload: jose.JWTPayload;
-
   try {
+    // Also rejects expired tokens
     payload = (await jose.jwtVerify(token, sessionCookieKey)).payload;
   } catch {
     return { user: null, payload: null };
-  }
-
-  // Check if the session is expired
-  if (payload.exp! < Math.floor(Date.now() / 1000)) {
-    return {
-      user: null,
-      payload: null,
-    };
   }
 
   const users = await db

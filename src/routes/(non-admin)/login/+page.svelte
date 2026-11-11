@@ -21,7 +21,9 @@
         callback: async () => {
           running = false;
         },
-        preHook: () => (running = true),
+        preHook: () => {
+          running = true;
+        },
       })}
     >
       <label class="label">
