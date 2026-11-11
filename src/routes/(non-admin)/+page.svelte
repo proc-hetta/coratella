@@ -4,11 +4,7 @@
   import { resolve } from '$app/paths';
 
   let { data } = $props();
-  let posts = $derived(
-    data.posts
-      .filter((p) => !p.draft)
-      .toSorted((p1, p2) => p2.ctime.getTime() - p1.ctime.getTime()),
-  );
+  let posts = $derived(data.posts);
 </script>
 
 <div>

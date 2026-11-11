@@ -1,4 +1,4 @@
-import { eq, sql, sum } from 'drizzle-orm';
+import { asc, desc, eq, sql, sum } from 'drizzle-orm';
 import { db } from '#lib/server/db/index.ts';
 import { posts, postsToAuthors, postsToCategories, postsToTags } from '#lib/server/db/schema.ts';
 import type { Author, Category, Post, Tag } from '#lib/server/db/schema.ts';
@@ -43,6 +43,39 @@ export async function getPosts() {
 export async function getPost(id: number) {
   const row = await db.query.posts.findFirst({ where: eq(posts.id, id), with: withRelations });
   return row ? flattenRelations(row) : null;
+}
+
+/**
+ * Published posts for the public listing, newest first, with only the fields the listing shows.
+ * Drafts, content and passwords never leave the database.
+ */
+export async function getPublishedPostSummaries() {
+  const rows = await db.query.posts.findMany({
+    columns: { id: true, title: true, ctime: true },
+    where: eq(posts.draft, false),
+    orderBy: [desc(posts.ctime), asc(posts.id)],
+    with: {
+      postsToTags: { columns: {}, with: { tag: { columns: { id: true, name: true } } } },
+      postsToCategories: {
+        columns: {},
+        with: { category: { columns: { id: true, name: true, color: true } } },
+      },
+      postsToAuthors: {
+        columns: {},
+        with: {
+          author: {
+            columns: { id: true, nickname: true, firstName: true, lastName: true, image: true },
+          },
+        },
+      },
+    },
+  });
+  return rows.map(({ postsToTags, postsToCategories, postsToAuthors, ...post }) => ({
+    ...post,
+    tags: postsToTags.map(({ tag }) => tag),
+    categories: postsToCategories.map(({ category }) => category),
+    authors: postsToAuthors.map(({ author }) => author),
+  }));
 }
 
 /** Removes a post and its author/tag/category links inside the given transaction. */

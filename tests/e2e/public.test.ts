@@ -25,6 +25,25 @@ test('home lists only published posts, newest first', async ({ page }) => {
   await expect(page.getByText('cat-newer').first()).toBeAttached();
 });
 
+test('home page data never contains passwords, drafts or content', async ({ page }) => {
+  await seedPost({ title: 'locked', content: 'secret-body', password: 'secret-pw' });
+  await seedPost({ title: 'secret-draft', content: 'draft-body', draft: true });
+  for (const path of ['/', '/__data.json']) {
+    const body = await (await page.request.get(path)).text();
+    expect(body).toContain('locked');
+    for (const secret of ['secret-pw', 'secret-body', 'secret-draft', 'draft-body']) {
+      expect(body, `${path} leaks ${secret}`).not.toContain(secret);
+    }
+  }
+});
+
+test('draft posts answer 404', async ({ page }) => {
+  const id = await seedPost({ title: 'unfinished', content: 'wip', draft: true });
+  const response = await page.goto(`/posts/${id}`);
+  expect(response?.status()).toBe(404);
+  await expect(page.getByText('wip')).toHaveCount(0);
+});
+
 test('renders a post and counts the visit', async ({ page }) => {
   const id = await seedPost({
     title: 'rendered',
