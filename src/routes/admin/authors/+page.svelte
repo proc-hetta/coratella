@@ -43,6 +43,7 @@
       <form
         id="author-form-{isNew ? 'new' : authorId}"
         method="POST"
+        enctype="multipart/form-data"
         action={isNew ? '?/create' : '?/edit'}
         class="flex flex-col items-center justify-center gap-2"
         use:enhance={coratellaFormCallback({
