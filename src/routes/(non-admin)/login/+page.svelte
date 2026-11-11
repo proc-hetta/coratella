@@ -3,15 +3,14 @@
   import { m } from '#lib/paraglide/messages.js';
   import { coratellaFormCallback } from '#lib/utils.ts';
   import { Progress } from '@skeletonlabs/skeleton-svelte';
-
-  const { data } = $props();
+  import { PUBLIC_TITLE } from '$app/env/public';
 
   let running = $state(false);
 </script>
 
 <div class="mt-32 flex items-center justify-center">
   <div class="card md:preset-filled-surface-100-900 w-full max-w-md p-4 text-center">
-    <h4 class="h4">{m.loginTitle({ title: data.title ?? 'Coratella' })}</h4>
+    <h4 class="h4">{m.loginTitle({ title: PUBLIC_TITLE ?? 'Coratella' })}</h4>
     <form
       class="mt-8 flex flex-col items-center justify-center gap-2"
       method="POST"

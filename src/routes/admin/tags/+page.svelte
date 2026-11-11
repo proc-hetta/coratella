@@ -1,23 +1,19 @@
 <script lang="ts">
-  import { deleteResource } from '#lib/admin.ts';
   import { m } from '#lib/paraglide/messages.js';
   import { Trash, Pencil, Plus } from '@lucide/svelte';
 
   import AdministrationCard from '#lib/components/AdministrationCard.svelte';
   import DialogModal from '#lib/components/DialogModal.svelte';
+  import DeleteForm from '#lib/components/DeleteForm.svelte';
   import { coratellaFormCallback } from '#lib/utils.js';
   import { enhance } from '$app/forms';
 
   let { data } = $props();
   let tags = $derived(data.tags);
-
-  function deleteTag(id: number) {
-    return deleteResource(`/admin/tags/${id}`, m.tagDeleted());
-  }
 </script>
 
-{#snippet tagForm(tagId: number, name: string)}
-  {@const isNew = Number.isNaN(tagId)}
+{#snippet tagForm(tagId: number | null, name: string)}
+  {@const isNew = tagId === null}
   <DialogModal
     title={isNew ? m.createTag() : m.editTag()}
     form={`tag-form-${isNew ? 'new' : tagId}`}
@@ -52,7 +48,7 @@
 
 <AdministrationCard title={m.tags()}>
   {#snippet addElement()}
-    {@render tagForm(NaN, '')}
+    {@render tagForm(null, '')}
   {/snippet}
   <table class="table whitespace-nowrap">
     <thead>
@@ -70,11 +66,8 @@
           <td class="text-right">
             <div class="flex flex-row justify-end">
               {@render tagForm(row.id, row.name)}
-              <DialogModal
-                title={m.deleteTag()}
-                onAccept={() => deleteTag(row.id)}
-                triggerClass="btn-icon"
-              >
+              <DeleteForm id="delete-tag-{row.id}" value={row.id} successMessage={m.tagDeleted()} />
+              <DialogModal title={m.deleteTag()} form="delete-tag-{row.id}" triggerClass="btn-icon">
                 {#snippet trigger()}
                   <Trash />
                 {/snippet}

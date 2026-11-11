@@ -1,6 +1,7 @@
 import { defineEnvVars } from '@sveltejs/kit/env';
+import * as z from 'zod';
 
-const optional = (input: string | undefined) => input;
+const optional = z.string().optional();
 
 export const variables = defineEnvVars({
   DATABASE_URL: { schema: optional, description: 'Postgres connection string' },

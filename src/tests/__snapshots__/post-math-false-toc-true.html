@@ -2,7 +2,8 @@
 <p>Intro paragraph with <strong>bold</strong>, <em>italic</em>, <del>strike</del>, <code>inline code</code> and a <a href="https://example.com">link</a>.</p>
 <h2 id="table-of-contents"><a aria-hidden="true" tabindex="-1" href="#table-of-contents"><span class="icon icon-link"></span></a>Table of contents</h2>
 <ul>
-<li><a href="#section-one">Section one</a><ul>
+<li><a href="#section-one">Section one</a>
+<ul>
 <li><a href="#code">Code</a></li>
 </ul>
 </li>
@@ -10,10 +11,10 @@
 <li><a href="#raw-html">Raw HTML</a></li>
 </ul>
 <h2 id="section-one"><a aria-hidden="true" tabindex="-1" href="#section-one"><span class="icon icon-link"></span></a>Section one</h2>
-<p>Autolink: <a href="https://example.org">https://example.org</a> and a footnote reference[^1].</p>
-<ul>
-<li><input checked="" disabled="" type="checkbox"> done task</li>
-<li><input disabled="" type="checkbox"> open task</li>
+<p>Autolink: <a href="https://example.org">https://example.org</a> and a footnote reference<sup><a href="#user-content-fn-1" id="user-content-fnref-1" data-footnote-ref="" aria-describedby="footnote-label">1</a></sup>.</p>
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" checked disabled> done task</li>
+<li class="task-list-item"><input type="checkbox" disabled> open task</li>
 </ul>
 <ol>
 <li>first</li>
@@ -26,7 +27,8 @@
 <th align="right">Value</th>
 </tr>
 </thead>
-<tbody><tr>
+<tbody>
+<tr>
 <td align="left">alpha</td>
 <td align="right">1</td>
 </tr>
@@ -34,21 +36,34 @@
 <td align="left">beta</td>
 <td align="right">2</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
 <blockquote>
 <p>A quote with a nested <code>code</code> span.</p>
 </blockquote>
 <h3 id="code"><a aria-hidden="true" tabindex="-1" href="#code"><span class="icon icon-link"></span></a>Code</h3>
 <pre><code class="hljs language-ts"><span class="hljs-keyword">const</span> <span class="hljs-attr">answer</span>: <span class="hljs-built_in">number</span> = <span class="hljs-number">42</span>;
 <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(answer);
-</code></pre><pre><code class="hljs language-unknownlang">plain text block
-</code></pre><pre><code class="hljs">no language
-</code></pre><h2 id="math"><a aria-hidden="true" tabindex="-1" href="#math"><span class="icon icon-link"></span></a>Math</h2>
+</code></pre>
+<pre><code class="hljs language-unknownlang">plain text block
+</code></pre>
+<pre><code>no language
+</code></pre>
+<h2 id="math"><a aria-hidden="true" tabindex="-1" href="#math"><span class="icon icon-link"></span></a>Math</h2>
 <p>Inline math $e^{i\pi} + 1 = 0$ inside text.</p>
 <p>$$
 \int_0^1 x^2 , dx = \frac{1}{3}
 $$</p>
 <h2 id="raw-html"><a aria-hidden="true" tabindex="-1" href="#raw-html"><span class="icon icon-link"></span></a>Raw HTML</h2>
-<div class="custom">raw <b>html</b></div><img src="x"><p><a>js link</a></p>
+<div class="custom">raw <b>html</b></div>
+
+<img src="x">
+<p><a>js link</a></p>
 <p><img src="https://example.com/image.png" alt="image"></p>
-<p>[^1]: The footnote text.</p>
+<section data-footnotes="" class="footnotes"><h2 class="sr-only" id="footnote-label"><a aria-hidden="true" tabindex="-1" href="#footnote-label"><span class="icon icon-link"></span></a>Footnotes</h2>
+<ol>
+<li id="user-content-fn-1">
+<p>The footnote text. <a href="#user-content-fnref-1" data-footnote-backref="" aria-label="Back to reference 1" class="data-footnote-backref">↩</a></p>
+</li>
+</ol>
+</section>

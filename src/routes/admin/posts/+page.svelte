@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { deleteResource } from '#lib/admin.ts';
   import { m } from '#lib/paraglide/messages.js';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { Trash, Pencil, Check, Plus } from '@lucide/svelte';
   import AdministrationCard from '#lib/components/AdministrationCard.svelte';
   import DialogModal from '#lib/components/DialogModal.svelte';
+  import DeleteForm from '#lib/components/DeleteForm.svelte';
 
   let { data } = $props();
   let posts = $derived(data.posts);
@@ -15,11 +15,7 @@
   }
 
   function editPost(id: number) {
-    goto(resolve('/admin/posts/[id=numberOrNew]', { id: String(id) }));
-  }
-
-  function deletePost(id: number) {
-    return deleteResource(`/admin/posts/${id}`, m.postDeleted());
+    goto(resolve('/admin/posts/[id=numberOrNew]', { id }));
   }
 </script>
 
@@ -48,19 +44,13 @@
           <td class="text-left">{post.id}</td>
           <td class="text-left">{post.title}</td>
           <td class="text-left">
-            {#each post.authors as author (author.id)}
-              {author.nickname}{author.id === post.authors.at(-1)!.id ? '' : ','}
-            {/each}
+            {post.authors.map((author) => author.nickname).join(', ')}
           </td>
           <td class="text-left">
-            {#each post.categories as category (category.id)}
-              {category.name}{category.id === post.categories.at(-1)!.id ? '' : ','}
-            {/each}
+            {post.categories.map((category) => category.name).join(', ')}
           </td>
           <td class="text-left">
-            {#each post.tags as tag (tag.id)}
-              {tag.name}{!post.tags || tag.id === post.tags.at(-1)!.id ? '' : ','}
-            {/each}
+            {post.tags.map((tag) => tag.name).join(', ')}
           </td>
           <td class="text-left">
             {#if post.draft}
@@ -73,9 +63,14 @@
               <button class="btn-icon" onclick={() => editPost(post.id)}>
                 <Pencil />
               </button>
+              <DeleteForm
+                id="delete-post-{post.id}"
+                value={post.id}
+                successMessage={m.postDeleted()}
+              />
               <DialogModal
                 title={m.deletePost()}
-                onAccept={() => deletePost(post.id)}
+                form="delete-post-{post.id}"
                 triggerClass="btn-icon"
               >
                 {#snippet trigger()}

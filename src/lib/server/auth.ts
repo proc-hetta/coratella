@@ -47,6 +47,27 @@ export function setSessionTokenCookie(event: RequestEvent, token: string, exp: n
   });
 }
 
+export const postUnlockCookieName = 'post-unlock';
+
+/** A token proving the reader entered the password of the given post. */
+export function generatePostUnlockToken(postId: number) {
+  return new jose.SignJWT({})
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('24h')
+    .setSubject(`post:${postId}`)
+    .sign(sessionCookieKey);
+}
+
+export async function isPostUnlocked(token: string | undefined, postId: number) {
+  if (!token) return false;
+  try {
+    await jose.jwtVerify(token, sessionCookieKey, { subject: `post:${postId}` });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function deleteSessionTokenCookie(event: RequestEvent) {
   event.cookies.delete(sessionCookieName, {
     path: '/',

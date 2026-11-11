@@ -1,12 +1,7 @@
-import { PUBLIC_LOGO, PUBLIC_LOGODARK, PUBLIC_LOGOLIGHT, PUBLIC_TITLE } from '$app/env/public';
+import { PUBLIC_LOGO, PUBLIC_LOGODARK, PUBLIC_LOGOLIGHT } from '$app/env/public';
+import fallbackLogo from '#lib/images/logo.svg';
 
-const fallbackLogo = './src/lib/images/logo.svg';
-
-/** Blog title and the logo matching the given color mode. */
-export function branding(mode: string) {
-  const modeLogo = mode === 'dark' ? PUBLIC_LOGODARK : PUBLIC_LOGOLIGHT;
-  return {
-    title: PUBLIC_TITLE,
-    logo: modeLogo ?? PUBLIC_LOGO ?? fallbackLogo,
-  };
+/** The logo matching the given color mode. */
+export function logo(mode: string) {
+  return (mode === 'dark' ? PUBLIC_LOGODARK : PUBLIC_LOGOLIGHT) ?? PUBLIC_LOGO ?? fallbackLogo;
 }

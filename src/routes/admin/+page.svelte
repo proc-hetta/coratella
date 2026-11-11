@@ -1,5 +1,6 @@
 <script lang="ts">
   import { m } from '#lib/paraglide/messages.js';
+  import { PUBLIC_TITLE } from '$app/env/public';
   let { data } = $props();
   const pageContents = $derived([
     {
@@ -30,7 +31,7 @@
 </script>
 
 <div class="flex h-full flex-col items-center justify-center gap-15">
-  <h1 class="h1 text-center">{m.dashboardTitle({ title: data.title ?? 'Coratella' })}</h1>
+  <h1 class="h1 text-center">{m.dashboardTitle({ title: PUBLIC_TITLE ?? 'Coratella' })}</h1>
   <div class="flex flex-wrap items-center justify-center gap-10">
     {#each pageContents as content (content.title)}
       <div class="flex flex-col gap-4">

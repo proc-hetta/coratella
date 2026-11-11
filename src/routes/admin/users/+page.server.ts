@@ -1,8 +1,16 @@
-import { getUsers, createUser, updateUser } from '#lib/server/db/users.ts';
-import { publicUser, serverFailure } from '#lib/server/actions.ts';
-import { fail } from '@sveltejs/kit';
+import * as z from 'zod';
+import { getUsers, createUser, updateUser, deleteUser } from '#lib/server/db/users.ts';
+import {
+  constraintFailure,
+  formFields,
+  invalid,
+  publicUser,
+  required,
+} from '#lib/server/actions.ts';
 import type { Actions, PageServerLoad } from './$types';
 import { m } from '#lib/paraglide/messages.js';
+
+const userId = required(() => m.missingId());
 
 export const load: PageServerLoad = async ({ locals }) => {
   return {
@@ -13,35 +21,31 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   create: async ({ request }) => {
-    const data = await request.formData();
-
-    const username = data.get('username');
-    const password = data.get('password');
-
-    if (!username || !password) {
-      return fail(400, { message: m.insertBothUsernameAndPassword() });
-    }
+    const credentials = required(() => m.insertBothUsernameAndPassword());
+    const form = z
+      .object({ username: credentials, password: credentials })
+      .safeParse(await formFields(request));
+    if (!form.success) return invalid(form.error);
     try {
-      await createUser(username.toString(), password.toString());
+      await createUser(form.data.username, form.data.password);
     } catch (e) {
-      return serverFailure(e);
+      return constraintFailure(e, m.alreadyExists());
     }
   },
   edit: async ({ request }) => {
-    const data = await request.formData();
-
-    const id = data.get('id');
-    if (!id) {
-      return fail(400, { message: m.missingId() });
-    }
+    const form = z
+      .object({ id: userId, username: z.string().optional(), password: z.string().optional() })
+      .safeParse(await formFields(request));
+    if (!form.success) return invalid(form.error);
     try {
-      await updateUser(
-        id.toString(),
-        data.get('username')?.toString(),
-        data.get('password')?.toString(),
-      );
+      await updateUser(form.data.id, form.data.username, form.data.password);
     } catch (e) {
-      return serverFailure(e);
+      return constraintFailure(e, m.alreadyExists());
     }
+  },
+  delete: async ({ request }) => {
+    const form = z.object({ id: userId }).safeParse(await formFields(request));
+    if (!form.success) return invalid(form.error);
+    await deleteUser(form.data.id);
   },
 };

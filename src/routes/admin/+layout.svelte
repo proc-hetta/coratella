@@ -56,11 +56,11 @@
             <a href={resolve('/admin/profile')} class="btn preset-tonal-surface-900"
               >{data.user.username}</a
             >
-            <div class="flex items-center">
-              <a href={resolve('/(non-admin)/logout')} class="btn-icon">
+            <form method="POST" action={resolve('/(non-admin)/logout')} class="flex items-center">
+              <button class="btn-icon" aria-label={m.logout()}>
                 <LogOut />
-              </a>
-            </div>
+              </button>
+            </form>
           </AppBar.Trail>
         </AppBar.Toolbar>
       </AppBar>

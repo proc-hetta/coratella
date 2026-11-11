@@ -1,8 +1,6 @@
 import { db } from '#lib/server/db/index.ts';
 import { totalVisits } from '#lib/server/db/posts.ts';
-import { branding } from '#lib/server/branding.ts';
 import { tags, posts, users, authors, categories } from '#lib/server/db/schema.ts';
-import { defaultMode } from '#lib/themes.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
@@ -13,6 +11,5 @@ export const load: PageServerLoad = async () => {
     authorsCount: await db.$count(authors),
     categoriesCount: await db.$count(categories),
     totalVisits: await totalVisits(),
-    ...branding(defaultMode),
   };
 };

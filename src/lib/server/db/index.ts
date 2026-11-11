@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { building } from '$app/env';
 import { exit } from 'node:process';
+import { hashPlaintextPostPasswords } from './post-passwords';
 
 // https://github.com/sveltejs/kit/issues/11341#issuecomment-1858836699
 if (!building && !DATABASE_URL) {
@@ -13,4 +14,7 @@ if (!building && !DATABASE_URL) {
 }
 const client = postgres(building ? '' : DATABASE_URL!);
 export const db = drizzle(client, { schema });
-if (!building) await migrate(db, { migrationsFolder: 'drizzle' });
+if (!building) {
+  await migrate(db, { migrationsFolder: 'drizzle' });
+  await hashPlaintextPostPasswords(db);
+}

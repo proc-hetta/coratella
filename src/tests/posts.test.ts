@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { isRedirect } from '@sveltejs/kit';
-import { call, jsonRequest, newPost, thrown } from './helpers';
+import { isHttpError, isRedirect } from '@sveltejs/kit';
+import { verify } from '@node-rs/argon2';
+import { call, formRequest, newPost, thrown } from './helpers';
 import * as postsPage from '../routes/admin/posts/+page.server';
-import * as postsEndpoint from '../routes/admin/posts/+server';
-import * as postEndpoint from '../routes/admin/posts/[id=numberOrNew]/+server';
 import * as postEditor from '../routes/admin/posts/[id=numberOrNew]/+page.server';
 import { createAuthor } from '#lib/server/db/authors.ts';
 import { createCategory } from '#lib/server/db/categories.ts';
@@ -16,6 +15,8 @@ import {
   updateOrCreatePost,
 } from '#lib/server/db/posts.ts';
 import { db } from '#lib/server/db/index.ts';
+import { argonOptions } from '#lib/server/db/utils.ts';
+import { hashPlaintextPostPasswords } from '#lib/server/db/post-passwords.ts';
 import { postsToAuthors, postsToCategories, postsToTags } from '#lib/server/db/schema.ts';
 
 async function relations() {
@@ -105,13 +106,26 @@ describe('posts data layer', () => {
     await updateOrCreatePost(newPost({ visits: 4, authors: [author], categories: [category] }));
     await incrementVisits(1);
     expect((await getPost(1))!.visits).toBe(4);
-    expect(await totalVisits()).toBe('8');
+    expect(await totalVisits()).toBe(8);
   });
 
   it('returns 0 total visits with no posts and null for missing post', async () => {
     expect(await totalVisits()).toBe(0);
     expect(await getPost(1)).toBeNull();
     expect(await getPosts()).toEqual([]);
+  });
+
+  it('hashes post passwords still stored in plaintext', async () => {
+    const { author, category } = await relations();
+    const base = { authors: [author], categories: [category] };
+    await updateOrCreatePost(newPost({ ...base, password: 'plain' }));
+    await updateOrCreatePost(newPost({ ...base, password: '$argon2id$v=19$already' }));
+    await updateOrCreatePost(newPost(base));
+    await hashPlaintextPostPasswords(db);
+    const [plain, hashed, open] = await Promise.all([1, 2, 3].map((id) => getPost(id)));
+    expect(await verify(plain!.password!, 'plain', argonOptions)).toBe(true);
+    expect(hashed!.password).toBe('$argon2id$v=19$already');
+    expect(open!.password).toBeNull();
   });
 });
 
@@ -129,45 +143,11 @@ describe('admin posts routes', () => {
     });
   });
 
-  it('creates through POST only when id is -1', async () => {
-    const { author, category } = await relations();
-    const forbidden = await call(postsEndpoint.POST, {
-      request: jsonRequest('POST', newPost({ id: 7, authors: [author], categories: [category] })),
-    });
-    expect(forbidden.status).toBe(403);
-
-    const response = await call(postsEndpoint.POST, {
-      request: jsonRequest('POST', newPost({ authors: [author], categories: [category] })),
-    });
-    expect(response.status).toBe(200);
-    expect(response.headers.get('Location')).toBe('/admin/posts/1');
-    expect(await response.json()).toMatchObject({ id: 1, title: 'Title' });
-  });
-
-  it('updates through PUT only when id is not -1', async () => {
-    const { author, category } = await relations();
-    const created = await updateOrCreatePost(
-      newPost({ authors: [author], categories: [category] }),
-    );
-
-    const forbidden = await call(postEndpoint.PUT, {
-      request: jsonRequest('PUT', newPost({ authors: [author], categories: [category] })),
-    });
-    expect(forbidden.status).toBe(403);
-
-    const response = await call(postEndpoint.PUT, {
-      request: jsonRequest('PUT', { ...created, title: 'Changed' }),
-    });
-    expect(response.status).toBe(200);
-    expect(response.headers.get('Location')).toBe('/admin/posts/1');
-    expect(await response.json()).toMatchObject({ id: 1, title: 'Changed' });
-  });
-
   it('deletes a post with its relations', async () => {
     const { author, category, tag } = await relations();
     await updateOrCreatePost(newPost({ authors: [author], categories: [category], tags: [tag] }));
-    const response = await call(postEndpoint.DELETE, { params: { id: '1' } });
-    expect(response.status).toBe(204);
+    const result = await call(postsPage.actions.delete, { request: formRequest({ id: '1' }) });
+    expect(result).toBeUndefined();
     expect(await getPosts()).toEqual([]);
     expect(await db.select().from(postsToAuthors)).toEqual([]);
     expect(await db.select().from(postsToTags)).toEqual([]);
@@ -187,11 +167,121 @@ describe('admin posts routes', () => {
 
   it('loads the editor for an existing post and redirects for a missing one', async () => {
     const { author, category } = await relations();
-    await updateOrCreatePost(newPost({ authors: [author], categories: [category] }));
-    expect(await call(postEditor.load, { params: { id: '1' } })).toMatchObject({
-      post: { id: 1 },
-    });
-    const error = await thrown(() => call(postEditor.load, { params: { id: '2' } }));
+    await updateOrCreatePost(
+      newPost({ password: 'hash', authors: [author], categories: [category] }),
+    );
+    const { post } = (await call(postEditor.load, { params: { id: 1 } })) as {
+      post: Record<string, unknown>;
+    };
+    expect(post).toMatchObject({ id: 1, hasPassword: true });
+    expect(post).not.toHaveProperty('password');
+    const error = await thrown(() => call(postEditor.load, { params: { id: 2 } }));
     expect(isRedirect(error) && error).toMatchObject({ status: 302, location: '/admin/posts' });
+  });
+
+  describe('save action', () => {
+    const save = (id: number | 'new', fields: Record<string, string | string[]>) =>
+      thrown(() =>
+        call(postEditor.actions.save, {
+          params: { id },
+          request: formRequest({
+            title: 'T',
+            content: 'C',
+            password: '',
+            draft: 'false',
+            ...fields,
+          }),
+        }),
+      );
+
+    it('creates a post and redirects to the list', async () => {
+      const { author, category, tag } = await relations();
+      const result = await save('new', {
+        toc: 'on',
+        authors: [String(author.id)],
+        categories: [String(category.id)],
+        tags: [String(tag.id)],
+        password: 'secret',
+        draft: 'true',
+      });
+      expect(isRedirect(result) && result).toMatchObject({ status: 303, location: '/admin/posts' });
+      const post = await getPost(1);
+      expect(post).toMatchObject({
+        title: 'T',
+        content: 'C',
+        draft: true,
+        toc: true,
+        math: false,
+        visits: 0,
+        authors: [author],
+        categories: [category],
+        tags: [tag],
+      });
+      expect(await verify(post!.password!, 'secret', argonOptions)).toBe(true);
+    });
+
+    it('updates in place, keeping creation time, visits and password', async () => {
+      const { author, author2, category } = await relations();
+      await save('new', {
+        password: 'secret',
+        authors: [String(author.id)],
+        categories: [String(category.id)],
+      });
+      await incrementVisits(1);
+      const before = (await getPost(1))!;
+      await save(1, {
+        title: 'Renamed',
+        authors: [String(author2.id)],
+        categories: [String(category.id)],
+      });
+      expect(await getPosts()).toHaveLength(1);
+      const after = (await getPost(1))!;
+      expect(after).toMatchObject({ id: 1, title: 'Renamed', visits: 1, authors: [author2] });
+      expect(after.ctime).toEqual(before.ctime);
+      expect(after.password).toBe(before.password);
+    });
+
+    it('replaces or removes the password', async () => {
+      const { author, category } = await relations();
+      const base = { authors: [String(author.id)], categories: [String(category.id)] };
+      await save('new', { ...base, password: 'old' });
+      await save(1, { ...base, password: 'new' });
+      expect(await verify((await getPost(1))!.password!, 'new', argonOptions)).toBe(true);
+      await save(1, { ...base, password: 'ignored', removePassword: 'on' });
+      expect((await getPost(1))!.password).toBeNull();
+    });
+
+    it('requires authors and categories', async () => {
+      const { author, category } = await relations();
+      const cases: Record<string, string[]>[] = [
+        { authors: [String(author.id)] },
+        { categories: [String(category.id)] },
+      ];
+      for (const fields of cases) {
+        expect(
+          await call(postEditor.actions.save, {
+            params: { id: 'new' },
+            request: formRequest({
+              title: 'T',
+              content: 'C',
+              password: '',
+              draft: 'false',
+              ...fields,
+            }),
+          }),
+        ).toMatchObject({ status: 400, data: { message: 'Error while saving' } });
+      }
+      expect(await getPosts()).toEqual([]);
+    });
+
+    it('answers 404 for a missing post', async () => {
+      const { author, category } = await relations();
+      const error = await save(9, {
+        authors: [String(author.id)],
+        categories: [String(category.id)],
+      });
+      expect(isHttpError(error) && error.status).toBe(404);
+      expect(await getPosts()).toEqual([]);
+    });
   });
 });

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { FileUpload } from '@skeletonlabs/skeleton-svelte';
   import { X, ImagePlus } from '@lucide/svelte/icons';
+  import { m } from '#lib/paraglide/messages.js';
 
   interface Props {
     readonly src?: string;
@@ -37,11 +38,11 @@
   >
     {#if !src}
       <ImagePlus class="text-surface-500 size-1/5" />
-      <span class="text-surface-400">Aggiungi immagine</span>
+      <span class="text-surface-400">{m.addImage()}</span>
     {:else}
       <img
         {src}
-        alt="Immagine di anteprima"
+        alt={m.imagePreview()}
         class="border-surface-200 max-h-full max-w-full object-contain"
       />
       <button

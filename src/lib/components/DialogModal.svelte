@@ -1,19 +1,17 @@
 <script lang="ts">
   import { m } from '#lib/paraglide/messages.js';
-  import { Dialog, Progress, Portal } from '@skeletonlabs/skeleton-svelte';
+  import { Dialog, Portal } from '@skeletonlabs/skeleton-svelte';
 
-  // `form`: id of a form to submit on confirm; otherwise `onAccept` runs.
+  // `form`: id of the form submitted on confirm.
   let {
     title,
     content,
-    form = undefined,
-    onAccept = async () => {},
+    form,
     trigger,
     triggerClass,
     triggerDisabled = false,
     onClick = () => {},
   } = $props();
-  let running = $state(false);
   const animation =
     'transition transition-discrete opacity-0 translate-y-[100px] starting:data-[state=open]:opacity-0 starting:data-[state=open]:translate-y-[100px] data-[state=open]:opacity-100 data-[state=open]:translate-y-0';
 </script>
@@ -35,30 +33,9 @@
           {@render content()}
         </Dialog.Description>
         <footer class="flex justify-end gap-2 pt-4">
-          <Dialog.CloseTrigger disabled={running} id="abort" class="btn preset-tonal"
-            >{m.abort()}</Dialog.CloseTrigger
-          >
-          <button
-            type={form ? 'submit' : 'button'}
-            {form}
-            disabled={running}
-            class="btn preset-filled-primary-500"
-            onclick={async () => {
-              if (form) return;
-              running = true;
-              await onAccept();
-              running = false;
-            }}
-          >
+          <Dialog.CloseTrigger id="abort" class="btn preset-tonal">{m.abort()}</Dialog.CloseTrigger>
+          <button type="submit" {form} class="btn preset-filled-primary-500">
             {m.confirm()}
-            <div class={running ? '' : 'hidden'}>
-              <Progress value={null}>
-                <Progress.Circle class="[--size:--spacing(4)]">
-                  <Progress.CircleTrack />
-                  <Progress.CircleRange />
-                </Progress.Circle>
-              </Progress>
-            </div>
           </button>
         </footer>
       </Dialog.Content>

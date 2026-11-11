@@ -26,10 +26,9 @@ const handleAuth: Handle = async ({ event, resolve }) => {
     return redirect(302, '/login');
   }
 
-  const { user, payload } = await auth.validateSessionToken(sessionToken);
+  const { user } = await auth.validateSessionToken(sessionToken);
   if (user?.user) {
     event.locals.user = user.user;
-    auth.setSessionTokenCookie(event, sessionToken, payload.exp!);
     return resolve(event);
   } else {
     event.locals.user = null;

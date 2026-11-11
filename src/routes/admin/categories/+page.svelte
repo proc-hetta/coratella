@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { deleteResource } from '#lib/admin.ts';
   import { m } from '#lib/paraglide/messages.js';
   import { Trash, Pencil, Circle, Plus } from '@lucide/svelte';
 
@@ -7,19 +6,16 @@
 
   import Color from 'color';
   import DialogModal from '#lib/components/DialogModal.svelte';
+  import DeleteForm from '#lib/components/DeleteForm.svelte';
   import { coratellaFormCallback } from '#lib/utils.js';
   import { enhance } from '$app/forms';
 
   let { data } = $props();
   let categories = $derived(data.categories);
-
-  function deleteCategory(id: number) {
-    return deleteResource(`/admin/categories/${id}`, m.categoryDeleted());
-  }
 </script>
 
-{#snippet categoryForm(categoryId: number, name: string, color: string)}
-  {@const isNew = Number.isNaN(categoryId)}
+{#snippet categoryForm(categoryId: number | null, name: string, color: string)}
+  {@const isNew = categoryId === null}
   <DialogModal
     title={isNew ? m.createTag() : m.editTag()}
     form={`category-form-${isNew ? 'new' : categoryId}`}
@@ -58,7 +54,7 @@
 
 <AdministrationCard title={m.categories()}>
   {#snippet addElement()}
-    {@render categoryForm(NaN, '', '#000000')}
+    {@render categoryForm(null, '', '#000000')}
   {/snippet}
   <table class="table whitespace-nowrap">
     <thead>
@@ -78,9 +74,14 @@
           <td class="text-right">
             <div class="flex flex-row justify-end">
               {@render categoryForm(row.id, row.name, row.color ?? '#000000')}
+              <DeleteForm
+                id="delete-category-{row.id}"
+                value={row.id}
+                successMessage={m.categoryDeleted()}
+              />
               <DialogModal
                 title={m.deleteCategory()}
-                onAccept={() => deleteCategory(row.id)}
+                form="delete-category-{row.id}"
                 triggerClass="btn-icon"
               >
                 {#snippet trigger()}

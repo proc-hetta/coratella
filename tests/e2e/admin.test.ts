@@ -36,7 +36,7 @@ test('dashboard shows counters and logout ends the session', async ({ page }) =>
   }
   await page.getByRole('link', { name: admin.username }).click();
   await expect(page).toHaveURL('/admin/profile');
-  await page.goto('/logout');
+  await page.getByRole('button', { name: 'Logout' }).click();
   await expect(page).toHaveURL('/login');
   await page.goto('/admin');
   await expect(page).toHaveURL('/login');
@@ -112,7 +112,8 @@ test('authors: create, validate email, delete', async ({ page }) => {
   await dialog(page).locator('input[name=nickname]').fill('ada');
   await dialog(page).locator('input[name=email]').fill('not-an-email');
   await confirm(page);
-  await toast(page, 'Incorrect required parameters: Email');
+  // The browser refuses to submit an invalid e-mail
+  await expect(dialog(page).locator('input[name=email]:invalid')).toHaveCount(1);
   await dismiss(page);
   await open();
   await dialog(page).locator('input[name=nickname]').fill('ada');
@@ -197,6 +198,8 @@ test('posts: create, preview, edit', async ({ page }) => {
   await toast(page, 'Post saved');
   const renamed = page.locator('tbody tr', { hasText: 'renamed post' });
   await expect(renamed.locator('td').nth(5).locator('svg')).toHaveCount(0);
+  // The post is updated in place
+  await expect(page.locator('tbody tr', { hasText: 'fresh post' })).toHaveCount(0);
 });
 
 test('posts: saving without authors or categories fails', async ({ page }) => {
@@ -205,8 +208,7 @@ test('posts: saving without authors or categories fails', async ({ page }) => {
   await page.locator('input[name=title]').fill('orphan');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await toast(page, 'Error while saving');
-  // Save buttons also submit the surrounding GET form
-  await expect(page).toHaveURL('/admin/posts/new?title=orphan&password=');
+  await expect(page).toHaveURL('/admin/posts/new');
 });
 
 test('posts: delete from the list', async ({ page }) => {

@@ -1,99 +1,30 @@
 <script lang="ts">
+  import 'katex/dist/katex.min.css';
   import { m } from '#lib/paraglide/messages.js';
   import { Tabs } from '@skeletonlabs/skeleton-svelte';
-  import DOMPurify from 'isomorphic-dompurify';
-  import { renderMarkdown } from '#lib/marked.ts';
-  import type { FullPost } from '#lib/server/db/posts.ts';
-  import { goto, refreshAll } from '$app/navigation';
-  import { resolve } from '$app/paths';
-  import { notifyError, notifySuccess } from '#lib/toaster.ts';
-  import { browser } from '$app/env';
+  import { renderMarkdown } from '#lib/markdown.ts';
+  import { enhance } from '$app/forms';
+  import { coratellaFormCallback } from '#lib/utils.ts';
 
-  type Option = { id: number; label: string; checked: boolean; toggle: (checked: boolean) => void };
+  type Option = { id: number; label: string };
 
   let { data } = $props();
-  let sourcePost: FullPost | null = $derived(data.post);
 
-  let post: FullPost = $state({
-    id: -1,
-    title: '',
-    content: '',
-    password: null,
-    draft: false,
-    toc: false,
-    math: false,
-    mtime: new Date(),
-    ctime: new Date(),
-    visits: 0,
-    tags: [],
-    categories: [],
-    authors: [],
-  });
-  $effect(() => {
-    if (!sourcePost) return;
+  // Kept in state for the preview; the form submits them as regular fields.
+  let content = $derived(data.post?.content ?? '');
+  let toc = $derived(data.post?.toc ?? false);
+  let math = $derived(data.post?.math ?? false);
 
-    post.title = sourcePost.title;
-    post.content = sourcePost.content;
-    post.password = sourcePost.password;
-    post.draft = sourcePost.draft;
-    post.toc = sourcePost.toc;
-    post.math = sourcePost.math;
-    post.tags = [...sourcePost.tags];
-    post.categories = [...sourcePost.categories];
-    post.authors = [...sourcePost.authors];
-  });
-
-  function isSelected(list: { id: number }[], item: { id: number }) {
-    return list.some((e) => e.id === item.id);
-  }
-
-  function toggled<T extends { id: number }>(list: T[], item: T, checked: boolean) {
-    return checked ? [...list, item] : list.filter((e) => e.id !== item.id);
-  }
-
-  let tagOptions: Option[] = $derived(
-    data.tags.map((tag) => ({
-      id: tag.id,
-      label: tag.name,
-      checked: isSelected(post.tags, tag),
-      toggle: (checked) => (post.tags = toggled(post.tags, tag, checked)),
-    })),
-  );
-  let categoryOptions: Option[] = $derived(
-    data.categories.map((category) => ({
-      id: category.id,
-      label: category.name,
-      checked: isSelected(post.categories, category),
-      toggle: (checked) => (post.categories = toggled(post.categories, category, checked)),
-    })),
-  );
-  let authorOptions: Option[] = $derived(
-    data.authors.map((author) => ({
-      id: author.id,
-      label: author.nickname,
-      checked: isSelected(post.authors, author),
-      toggle: (checked) => (post.authors = toggled(post.authors, author, checked)),
-    })),
-  );
-
-  async function save(draft: boolean) {
-    post.draft = draft;
-    const isNew = post.id === -1;
-    const response = await fetch(isNew ? '/admin/posts' : `/admin/posts/${post.id}`, {
-      method: isNew ? 'POST' : 'PUT',
-      body: JSON.stringify(post),
-    });
-    if (response.ok) {
-      notifySuccess(m.postSaved());
-      await refreshAll();
-      goto(resolve('/admin/posts'));
-    } else {
-      notifyError(m.errorWhileSaving());
-    }
-  }
+  const selected = (list: { id: number }[] | undefined, id: number) =>
+    list?.some((item) => item.id === id) ?? false;
 </script>
 
-{#snippet selection(legend: string, options: Option[])}
+{#snippet selection(
+  legend: string,
+  name: string,
+  options: Option[],
+  chosen: { id: number }[] | undefined,
+)}
   <fieldset class="col-span-full">
     <legend class="label-text">{legend}</legend>
     <div class="col-span-full columns-3xs">
@@ -102,8 +33,9 @@
           <input
             class="checkbox"
             type="checkbox"
-            checked={option.checked}
-            onchange={(e) => option.toggle(e.currentTarget.checked)}
+            {name}
+            value={option.id}
+            checked={selected(chosen, option.id)}
           />
           <p>
             {option.label}
@@ -116,12 +48,18 @@
 
 <div class="flex flex-col items-center gap-2">
   <div class="card md:preset-filled-surface-100-900 w-full p-4 text-center">
-    <form class="flex flex-col gap-2">
+    <form
+      id="post-form"
+      method="POST"
+      action="?/save"
+      class="flex flex-col gap-2"
+      use:enhance={coratellaFormCallback({ successMessage: m.postSaved(), refreshAll: true })}
+    >
       <div class="flex flex-wrap items-center justify-center gap-2">
         <label class="label md:w-max">
           <span class="label-text text-left">{m.title()}</span>
           <input
-            bind:value={post.title}
+            value={data.post?.title ?? ''}
             class="input"
             type="text"
             name="title"
@@ -131,30 +69,51 @@
         <label class="label md:w-max">
           <span class="label-text text-left">{m.password()}</span>
           <input
-            bind:value={post.password}
             class="input"
-            type="text"
+            type="password"
             name="password"
-            placeholder={m.optionalPassword()}
+            autocomplete="new-password"
+            placeholder={data.post?.hasPassword ? m.keepPassword() : m.optionalPassword()}
           />
         </label>
+        {#if data.post?.hasPassword}
+          <label class="label md:w-max">
+            <span>{m.removePassword()}</span><br />
+            <input class="checkbox" type="checkbox" name="removePassword" />
+          </label>
+        {/if}
         <label class="label md:w-max">
-          <span>Table of Contents</span><br />
-          <input bind:checked={post.toc} class="checkbox" type="checkbox" />
+          <span>{m.tableOfContents()}</span><br />
+          <input bind:checked={toc} class="checkbox" type="checkbox" name="toc" />
         </label>
         <label class="label md:w-max">
-          <span>Enable Math</span><br />
-          <input bind:checked={post.math} class="checkbox" type="checkbox" />
+          <span>{m.enableMath()}</span><br />
+          <input bind:checked={math} class="checkbox" type="checkbox" name="math" />
         </label>
       </div>
-      {@render selection(m.tags(), tagOptions)}
-      {@render selection(m.categories(), categoryOptions)}
-      {@render selection(m.authors(), authorOptions)}
+      {@render selection(
+        m.tags(),
+        'tags',
+        data.tags.map((tag) => ({ id: tag.id, label: tag.name })),
+        data.post?.tags,
+      )}
+      {@render selection(
+        m.categories(),
+        'categories',
+        data.categories.map((category) => ({ id: category.id, label: category.name })),
+        data.post?.categories,
+      )}
+      {@render selection(
+        m.authors(),
+        'authors',
+        data.authors.map((author) => ({ id: author.id, label: author.nickname })),
+        data.post?.authors,
+      )}
       <div>
-        <button class="btn preset-filled-primary-500" onclick={() => save(true)}>
+        <button class="btn preset-filled-primary-500" name="draft" value="true">
           {m.saveAsDraft()}
         </button>
-        <button class="btn preset-filled-primary-500" onclick={() => save(false)}>
+        <button class="btn preset-filled-primary-500" name="draft" value="false">
           {m.save()}
         </button>
       </div>
@@ -163,20 +122,23 @@
 
   <Tabs defaultValue="editor">
     <Tabs.List>
-      <Tabs.Trigger value="editor">Editor</Tabs.Trigger>
-      <Tabs.Trigger value="preview">Preview</Tabs.Trigger>
+      <Tabs.Trigger value="editor">{m.editor()}</Tabs.Trigger>
+      <Tabs.Trigger value="preview">{m.preview()}</Tabs.Trigger>
     </Tabs.List>
     <Tabs.Content value="editor"
-      ><textarea bind:value={post.content} class="textarea" rows="30" placeholder={m.content()}
-      ></textarea></Tabs.Content
+      ><textarea
+        bind:value={content}
+        form="post-form"
+        name="content"
+        class="textarea"
+        rows="30"
+        placeholder={m.content()}></textarea></Tabs.Content
     >
     <Tabs.Content value="preview">
-      {#if browser}
-        <div class="prose prose-neutral prose-invert max-w-none">
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized by DOMPurify -->
-          {@html DOMPurify.sanitize(renderMarkdown(post.content, post.math, post.toc))}
-        </div>
-      {/if}
+      <div class="prose prose-neutral prose-invert max-w-none">
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized by rehype-sanitize -->
+        {@html renderMarkdown(content, math, toc)}
+      </div>
     </Tabs.Content>
   </Tabs>
 </div>

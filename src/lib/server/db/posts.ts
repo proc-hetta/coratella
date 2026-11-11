@@ -9,8 +9,18 @@ export type FullPost = Post & {
   authors: Author[];
 };
 
+/** The fields `updateOrCreatePost` stores; `id: -1` creates a new post. */
+export type PostInput = Pick<
+  Post,
+  'id' | 'title' | 'content' | 'password' | 'draft' | 'toc' | 'math' | 'ctime' | 'visits'
+> & {
+  tags: { id: number }[];
+  categories: { id: number }[];
+  authors: { id: number }[];
+};
+
 export async function totalVisits() {
-  const result = await db.select({ totalVisits: sum(posts.visits) }).from(posts);
+  const result = await db.select({ totalVisits: sum(posts.visits).mapWith(Number) }).from(posts);
   return result.pop()?.totalVisits ?? 0;
 }
 
@@ -86,7 +96,7 @@ async function removePost(tx: Pick<typeof db, 'delete'>, id: number) {
   await tx.delete(posts).where(eq(posts.id, id));
 }
 
-export async function updateOrCreatePost(fullpost: FullPost) {
+export async function updateOrCreatePost(fullpost: PostInput) {
   if (fullpost.authors.length === 0 || fullpost.categories.length === 0) {
     throw new Error('Authors or Categories are empty!');
   }

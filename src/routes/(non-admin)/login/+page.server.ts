@@ -7,27 +7,25 @@ import * as table from '#lib/server/db/schema.ts';
 import { argonOptions } from '#lib/server/db/utils.ts';
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { branding } from '#lib/server/branding.ts';
+import { logo } from '#lib/server/branding.ts';
 import { defaultMode } from '#lib/themes.ts';
+import * as z from 'zod';
+import { formFields, invalid, required } from '#lib/server/actions.ts';
 
-export const load: PageServerLoad = async () => branding(defaultMode);
+const credentials = required(() => m.insertBothUsernameAndPassword());
+const loginForm = z.object({ username: credentials, password: credentials });
+
+export const load: PageServerLoad = async () => ({ logo: logo(defaultMode) });
 
 export const actions: Actions = {
   default: async (event) => {
-    const formData = await event.request.formData();
-    const username = formData.get('username');
-    const password = formData.get('password');
+    const form = loginForm.safeParse(await formFields(event.request));
+    if (!form.success) return invalid(form.error);
+    const { username, password } = form.data;
 
-    if (!username || !password) {
-      return fail(400, { message: m.insertBothUsernameAndPassword() });
-    }
+    const [user] = await db.select().from(table.users).where(eq(table.users.username, username));
 
-    const [user] = await db
-      .select()
-      .from(table.users)
-      .where(eq(table.users.username, username.toString()));
-
-    const validPassword = user && (await verify(user.password, password.toString(), argonOptions));
+    const validPassword = user && (await verify(user.password, password, argonOptions));
     if (!validPassword) {
       return fail(401, { message: m.incorrectUsernameOrPassword() });
     }

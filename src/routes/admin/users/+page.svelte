@@ -1,21 +1,17 @@
 <script lang="ts">
-  import { deleteResource } from '#lib/admin.ts';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { m } from '#lib/paraglide/messages.js';
   import { Trash, Pencil, Plus } from '@lucide/svelte';
   import AdministrationCard from '#lib/components/AdministrationCard.svelte';
   import DialogModal from '#lib/components/DialogModal.svelte';
+  import DeleteForm from '#lib/components/DeleteForm.svelte';
   import { coratellaFormCallback } from '#lib/utils.ts';
   import { enhance } from '$app/forms';
 
   let { data } = $props();
   let users = $derived(data.users);
   let user = $derived(data.user);
-
-  function deleteUser(id: string) {
-    return deleteResource(`/admin/users/${id}`, m.userDeleted());
-  }
 </script>
 
 {#snippet userForm(userId: string | null, username: string)}
@@ -82,9 +78,14 @@
               {:else}
                 {@render userForm(row.id, row.username)}
               {/if}
+              <DeleteForm
+                id="delete-user-{row.id}"
+                value={row.id}
+                successMessage={m.userDeleted()}
+              />
               <DialogModal
                 title={m.deleteUser()}
-                onAccept={() => deleteUser(row.id)}
+                form="delete-user-{row.id}"
                 triggerClass="btn-icon"
                 triggerDisabled={row.id == user.id}
               >

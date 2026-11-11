@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { deleteResource } from '#lib/admin.ts';
-  import { notifyError } from '#lib/toaster.ts';
   import { m } from '#lib/paraglide/messages.js';
   import { Trash, Pencil, Plus } from '@lucide/svelte';
 
   import AdministrationCard from '#lib/components/AdministrationCard.svelte';
   import { Avatar } from '@skeletonlabs/skeleton-svelte';
   import DialogModal from '#lib/components/DialogModal.svelte';
+  import DeleteForm from '#lib/components/DeleteForm.svelte';
   import { coratellaFormCallback } from '#lib/utils.ts';
   import { enhance } from '$app/forms';
   import ImageFrame from '#lib/components/ImageFrame.svelte';
@@ -16,41 +15,17 @@
 
   let imageFile: File | null = $state(null);
   let profileImage: string | null = $state(null);
-
-  /** Uploads the selected image, returning its URL, or `null` after notifying a failure. */
-  async function uploadImage(file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await fetch('/admin/files', {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-    });
-    if (response.status === 401) {
-      notifyError(m.errorNoTorcoloAuth());
-      return null;
-    }
-    if (!response.ok) {
-      notifyError(String(response.status));
-      return null;
-    }
-    return response.headers.get('Location')!;
-  }
-
-  function deleteAuthor(id: number) {
-    return deleteResource(`/admin/authors/${id}`, m.authorDeleted());
-  }
 </script>
 
 {#snippet authorForm(
-  authorId: number,
+  authorId: number | null,
   nickname: string,
   firstName: string,
   lastName: string,
   image: string | null,
   email: string | null,
 )}
-  {@const isNew = Number.isNaN(authorId)}
+  {@const isNew = authorId === null}
   <DialogModal
     title={isNew ? m.createAuthor() : m.editAuthor()}
     form={`author-form-${isNew ? 'new' : authorId}`}
@@ -73,12 +48,8 @@
         use:enhance={coratellaFormCallback({
           successMessage: isNew ? m.authorCreationSuccessful() : m.successfulModification(),
           refreshAll: true,
-          preHook: async ({ formData, cancel }) => {
-            if (!imageFile) return;
-            const url = await uploadImage(imageFile);
-            if (url === null) return cancel();
-            profileImage = url;
-            formData.set('image', url);
+          preHook: ({ formData }) => {
+            if (imageFile) formData.set('imageFile', imageFile);
           },
         })}
       >
@@ -99,7 +70,7 @@
           </label>
           <label class="label">
             <span class="label-text text-left">{m.email()}</span>
-            <input class="input" type="text" value={email} name="email" />
+            <input class="input" type="email" value={email} name="email" />
           </label>
           <label class="label">
             <span class="label-text text-left">{m.firstName()}</span>
@@ -119,7 +90,7 @@
 
 <AdministrationCard title={m.authors()}>
   {#snippet addElement()}
-    {@render authorForm(NaN, '', '', '', null, '')}
+    {@render authorForm(null, '', '', '', null, '')}
   {/snippet}
   <table class="table whitespace-nowrap">
     <thead>
@@ -157,15 +128,18 @@
                 row.image,
                 row.email,
               )}
+              <DeleteForm
+                id="delete-author-{row.id}"
+                value={row.id}
+                successMessage={m.authorDeleted()}
+              />
               <DialogModal
                 title={m.deleteAuthor()}
-                onAccept={() => deleteAuthor(row.id)}
+                form="delete-author-{row.id}"
                 triggerClass="btn-icon"
               >
                 {#snippet trigger()}
-                  <button class="btn-icon">
-                    <Trash />
-                  </button>
+                  <Trash />
                 {/snippet}
                 {#snippet content()}
                   <p>{m.deletePrompt({ parameter: row.nickname })}</p>

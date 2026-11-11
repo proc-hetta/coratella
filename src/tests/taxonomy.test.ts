@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { call, formRequest } from './helpers';
 import * as tagsPage from '../routes/admin/tags/+page.server';
-import * as tagEndpoint from '../routes/admin/tags/[id=number]/+server';
 import * as categoriesPage from '../routes/admin/categories/+page.server';
-import * as categoryEndpoint from '../routes/admin/categories/[id=number]/+server';
 import { createTag, getTags } from '#lib/server/db/tags.ts';
 import { createCategory, getCategories } from '#lib/server/db/categories.ts';
 import { createAuthor } from '#lib/server/db/authors.ts';
@@ -38,10 +36,13 @@ describe('admin tags', () => {
     });
   });
 
-  it('reports database errors as 500', async () => {
+  it('reports a duplicate name', async () => {
     await createTag('dup');
     const result = await call(tagsPage.actions.create, { request: formRequest({ name: 'dup' }) });
-    expect(result).toMatchObject({ status: 500 });
+    expect(result).toEqual({
+      status: 400,
+      data: { message: 'An element with the same values already exists' },
+    });
   });
 
   it('edits a tag', async () => {
@@ -62,8 +63,8 @@ describe('admin tags', () => {
 
   it('deletes a tag', async () => {
     await createTag('x');
-    const response = await call(tagEndpoint.DELETE, { params: { id: '1' } });
-    expect(response.status).toBe(204);
+    const result = await call(tagsPage.actions.delete, { request: formRequest({ id: '1' }) });
+    expect(result).toBeUndefined();
     expect(await getTags()).toEqual([]);
   });
 
@@ -72,7 +73,10 @@ describe('admin tags', () => {
     const [author] = await createAuthor('nick');
     const [category] = await createCategory('cat', undefined);
     await updateOrCreatePost(newPost({ tags: [tag], authors: [author], categories: [category] }));
-    await expect(call(tagEndpoint.DELETE, { params: { id: '1' } })).rejects.toThrow();
+    expect(
+      await call(tagsPage.actions.delete, { request: formRequest({ id: '1' }) }),
+    ).toMatchObject({ status: 400, data: { message: 'Error while deleting' } });
+    expect(await getTags()).toHaveLength(1);
   });
 });
 
@@ -122,8 +126,10 @@ describe('admin categories', () => {
 
   it('deletes a category', async () => {
     await createCategory('c', undefined);
-    const response = await call(categoryEndpoint.DELETE, { params: { id: '1' } });
-    expect(response.status).toBe(204);
+    const result = await call(categoriesPage.actions.delete, {
+      request: formRequest({ id: '1' }),
+    });
+    expect(result).toBeUndefined();
     expect(await getCategories()).toEqual([]);
   });
 });

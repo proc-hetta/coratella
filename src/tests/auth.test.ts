@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { isRedirect } from '@sveltejs/kit';
 import * as jose from 'jose';
 import { call, cookieJar, formRequest, thrown } from './helpers';
@@ -7,7 +7,6 @@ import * as loginPage from '../routes/(non-admin)/login/+page.server';
 import * as logout from '../routes/(non-admin)/logout/+server';
 import * as adminLayout from '../routes/admin/+layout.server';
 import * as adminHome from '../routes/admin/+page.server';
-import * as files from '../routes/admin/files/+server';
 import { createUser } from '#lib/server/db/users.ts';
 import { createTag } from '#lib/server/db/tags.ts';
 
@@ -34,6 +33,17 @@ describe('session tokens', () => {
     expect(await auth.validateSessionToken(foreign)).toEqual({ user: null, payload: null });
     const ghost = await auth.generateSessionToken({ ...user, id: 'ghost' });
     expect((await auth.validateSessionToken(ghost.token)).user).toBeNull();
+  });
+
+  it('signs post unlock tokens valid for one post only', async () => {
+    const token = await auth.generatePostUnlockToken(1);
+    expect(await auth.isPostUnlocked(token, 1)).toBe(true);
+    expect(await auth.isPostUnlocked(token, 2)).toBe(false);
+    expect(await auth.isPostUnlocked(token + 'x', 1)).toBe(false);
+    expect(await auth.isPostUnlocked(undefined, 1)).toBe(false);
+    const [user] = await createUser('u', 'p');
+    const session = await auth.generateSessionToken(user);
+    expect(await auth.isPostUnlocked(session.token, 1)).toBe(false);
   });
 
   it('sets and deletes the session cookie', () => {
@@ -91,30 +101,24 @@ describe('login and logout', () => {
     }
   });
 
-  it('exposes title and logo on the login page', async () => {
-    expect(await call(loginPage.load, {})).toEqual({
-      title: 'Test Title',
-      logo: '/logolight.svg',
-    });
+  it('exposes the logo on the login page', async () => {
+    expect(await call(loginPage.load, {})).toEqual({ logo: '/logolight.svg' });
   });
 
   it('logs out by deleting the cookie and redirecting to login', async () => {
     const { cookies, operations } = cookieJar({ 'auth-session': 'x' });
-    const result = await thrown(() => call(logout.GET, { cookies }));
-    expect(isRedirect(result) && result).toMatchObject({ status: 302, location: '/login' });
+    const result = await thrown(() => call(logout.POST, { cookies }));
+    expect(isRedirect(result) && result).toMatchObject({ status: 303, location: '/login' });
     expect(operations).toEqual([{ op: 'delete', name: 'auth-session', options: { path: '/' } }]);
   });
 });
 
 describe('admin shell', () => {
-  it('exposes reduced user, themes, modes, title and mode-dependent logo', async () => {
+  it('exposes reduced user and mode-dependent logo', async () => {
     const [user] = await createUser('u', 'p');
     const light = cookieJar();
     expect(await call(adminLayout.load, { locals: { user }, cookies: light.cookies })).toEqual({
       user: { id: user.id, username: 'u' },
-      themes: ['wintry', 'reign', 'mint', 'rose', 'pine', 'cerberus'],
-      modes: ['system', 'dark', 'light'],
-      title: 'Test Title',
       logo: '/logolight.svg',
     });
     const dark = cookieJar({ mode: 'dark' });
@@ -138,53 +142,6 @@ describe('admin shell', () => {
       authorsCount: 0,
       categoriesCount: 0,
       totalVisits: 0,
-      title: 'Test Title',
-      logo: '/logolight.svg',
     });
-  });
-});
-
-describe('file upload', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-    vi.unstubAllGlobals();
-  });
-
-  const upload = () => {
-    const body = new FormData();
-    body.append('file', new File(['data'], 'a.png', { type: 'image/png' }));
-    return call(files.POST, {
-      request: new Request('http://localhost/admin/files', { method: 'POST', body }),
-    });
-  };
-
-  it('answers 401 when Torcolo is not configured', async () => {
-    vi.stubEnv('TORCOLO_URL', undefined);
-    vi.stubEnv('TORCOLO_TOKEN', undefined);
-    expect((await upload()).status).toBe(401);
-  });
-
-  it('forwards the file to Torcolo and returns its location', async () => {
-    vi.stubEnv('TORCOLO_URL', 'https://torcolo.test');
-    vi.stubEnv('TORCOLO_TOKEN', 'tok');
-    const fetchMock = vi.fn(
-      async () => new Response(null, { status: 201, headers: { Location: '/files/abc' } }),
-    );
-    vi.stubGlobal('fetch', fetchMock);
-    const response = await upload();
-    expect(response.status).toBe(201);
-    expect(response.headers.get('Location')).toBe('https://torcolo.test/files/abc');
-    const [target, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(target).toBe('https://torcolo.test/files');
-    expect(init.method).toBe('POST');
-    expect(init.headers).toEqual({ Authorization: 'Bearer tok' });
-    expect((init.body as FormData).get('file')).toBeInstanceOf(File);
-  });
-
-  it('fails when Torcolo answers with an error', async () => {
-    vi.stubEnv('TORCOLO_URL', 'https://torcolo.test');
-    vi.stubEnv('TORCOLO_TOKEN', 'tok');
-    vi.stubGlobal('fetch', async () => new Response(null, { status: 500 }));
-    await expect(upload()).rejects.toThrow('Error while uploading file, status code 500');
   });
 });

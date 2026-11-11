@@ -5,6 +5,8 @@ import { databaseUrl } from '../../playwright.config';
 
 export const admin = { username: 'admin', password: 'admin-password' };
 
+const argonOptions = { memoryCost: 19456, timeCost: 2, outputLen: 32, parallelism: 1 };
+
 const sql = postgres(databaseUrl, { onnotice: () => {} });
 
 let migrated = false;
@@ -16,12 +18,7 @@ export async function resetDatabase() {
     migrated = true;
   }
   await sql`TRUNCATE posts_to_tags, posts_to_categories, posts_to_authors, posts, tags, categories, authors, users RESTART IDENTITY CASCADE`;
-  const password = await hash(admin.password, {
-    memoryCost: 19456,
-    timeCost: 2,
-    outputLen: 32,
-    parallelism: 1,
-  });
+  const password = await hash(admin.password, argonOptions);
   await sql`INSERT INTO users (id, username, password) VALUES ('00000000-0000-4000-8000-000000000001', ${admin.username}, ${password})`;
 }
 
@@ -37,8 +34,9 @@ export async function seedPost(post: {
   const [category] = await sql`INSERT INTO categories (name, color)
     VALUES (${'cat-' + post.title}, '#ff0000') RETURNING id`;
   const [tag] = await sql`INSERT INTO tags (name) VALUES (${'tag-' + post.title}) RETURNING id`;
+  const password = post.password ? await hash(post.password, argonOptions) : null;
   const [row] = await sql`INSERT INTO posts (title, content, password, draft, toc, math, ctime)
-    VALUES (${post.title}, ${post.content}, ${post.password ?? null}, ${post.draft ?? false}, true, true,
+    VALUES (${post.title}, ${post.content}, ${password}, ${post.draft ?? false}, true, true,
       ${post.ctime ?? '2024-01-01T00:00:00Z'}) RETURNING id`;
   await sql`INSERT INTO posts_to_authors VALUES (${row.id}, ${author.id})`;
   await sql`INSERT INTO posts_to_categories VALUES (${row.id}, ${category.id})`;

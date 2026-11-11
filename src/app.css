@@ -10,13 +10,21 @@
 @import '@skeletonlabs/skeleton/themes/pine';
 @import '@skeletonlabs/skeleton/themes/cerberus';
 
-@import '../node_modules/highlight.js/styles/github-dark.css';
+@import 'highlight.js/styles/github-dark.css';
 
 @import '@skeletonlabs/skeleton-svelte';
 
-@custom-variant system (&:where([data-mode=system], [data-mode=system] *));
-@custom-variant light (&:where([data-mode=light], [data-mode=light] *));
-@custom-variant dark (&:where([data-mode=dark], [data-mode=dark] *));
+/* `system` follows the operating system preference. */
+@custom-variant dark {
+  &:where([data-mode='dark'], [data-mode='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-mode='system'], [data-mode='system'] *) {
+      @slot;
+    }
+  }
+}
 
 .hljs {
   font-size: 14px;

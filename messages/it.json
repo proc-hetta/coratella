@@ -79,5 +79,17 @@
   "deleteTag": "Elimina tag",
   "deleteCategory": "Elimina categoria",
   "deleteUser": "Elimina utente",
-  "deleteAuthor": "Elimina autore"
+  "deleteAuthor": "Elimina autore",
+  "alreadyExists": "Esiste già un elemento con gli stessi valori",
+  "incorrectPassword": "Password errata",
+  "removePassword": "Rimuovi password",
+  "keepPassword": "Lascia vuoto per mantenere la password attuale",
+  "createdAt": "Creato il: {date}",
+  "tableOfContents": "Indice",
+  "enableMath": "Abilita formule",
+  "editor": "Editor",
+  "preview": "Anteprima",
+  "addImage": "Aggiungi immagine",
+  "imagePreview": "Immagine di anteprima",
+  "logout": "Esci"
 }

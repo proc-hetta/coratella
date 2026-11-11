@@ -1,8 +1,18 @@
-import { fail } from '@sveltejs/kit';
-import { publicUser, serverFailure } from '#lib/server/actions.ts';
+import * as z from 'zod';
+import { constraintFailure, formFields, invalid, publicUser } from '#lib/server/actions.ts';
 import { m } from '#lib/paraglide/messages.js';
 import type { Actions, PageServerLoad } from './$types';
 import { updateUser } from '#lib/server/db/users.ts';
+
+const profile = z
+  .object({
+    username: z.string().optional(),
+    password: z.string().optional(),
+    repeatPassword: z.string().optional(),
+  })
+  .refine((form) => form.password === form.repeatPassword, {
+    error: () => m.passwordDoesntMatches(),
+  });
 
 export const load: PageServerLoad = async ({ locals }) => {
   return { user: publicUser(locals.user!) };
@@ -10,16 +20,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   default: async ({ request, locals }) => {
-    const data = await request.formData();
-
-    const password = data.get('password');
-    if (password !== data.get('repeatPassword')) {
-      return fail(400, { message: m.passwordDoesntMatches() });
-    }
+    const form = profile.safeParse(await formFields(request));
+    if (!form.success) return invalid(form.error);
     try {
-      await updateUser(locals.user!.id, data.get('username')?.toString(), password?.toString());
+      await updateUser(locals.user!.id, form.data.username, form.data.password);
     } catch (e) {
-      return serverFailure(e);
+      return constraintFailure(e, m.alreadyExists());
     }
   },
 };

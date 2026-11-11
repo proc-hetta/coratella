@@ -73,8 +73,7 @@ test('renders a post and counts the visit', async ({ page }) => {
   await expect(prose.getByRole('heading', { level: 1, name: 'Heading' })).toBeVisible();
   await expect(prose.locator('strong')).toHaveText('bold');
   await expect(prose.locator('.katex').first()).toBeAttached();
-  // With math enabled the code block is not highlighted
-  await expect(prose.locator('code.language-ts:not(.hljs)')).toBeAttached();
+  await expect(prose.locator('code.hljs.language-ts .hljs-keyword')).toHaveText('const');
   await expect(prose.getByRole('link', { name: 'Sub' })).toHaveAttribute('href', '#sub');
   await expect(page.getByRole('link', { name: 'rendered@example.com' })).toHaveAttribute(
     'href',
@@ -88,10 +87,35 @@ test('protects posts with a password', async ({ page }) => {
   const id = await seedPost({ title: 'secret', content: 'hidden body', password: 'pw' });
   await page.goto(`/posts/${id}`);
   await expect(page).toHaveURL(`/password?post=${id}`);
+  await page.getByPlaceholder('Password').fill('wrong');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByText('Incorrect password')).toBeVisible();
   await page.getByPlaceholder('Password').fill('pw');
   await page.getByRole('button', { name: 'Save' }).click();
-  await expect(page).toHaveURL(`/posts/${id}?password=pw`);
+  await expect(page).toHaveURL(`/posts/${id}`);
   await expect(page.getByText('hidden body')).toBeVisible();
+  // The password never appears in the URL, and the post stays unlocked
+  await page.reload();
+  await expect(page.getByText('hidden body')).toBeVisible();
+});
+
+test('hovering a post link does not count a visit', async ({ page }) => {
+  const id = await seedPost({ title: 'hovered', content: 'x' });
+  await page.goto('/');
+  await page.getByRole('heading', { name: 'hovered' }).hover();
+  await page.waitForTimeout(500);
+  expect(await visitsOf(id)).toBe(0);
+});
+
+test('system mode follows the operating system color scheme', async ({ page }) => {
+  const colorScheme = () =>
+    page.evaluate(() => getComputedStyle(document.documentElement).colorScheme);
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-mode', 'system');
+  expect(await colorScheme()).toBe('dark');
+  await page.emulateMedia({ colorScheme: 'light' });
+  expect(await colorScheme()).toBe('light');
 });
 
 test('password page without post redirects home', async ({ page }) => {

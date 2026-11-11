@@ -5,17 +5,13 @@ import { hash } from '@node-rs/argon2';
 import { argonOptions } from '#lib/server/db/utils.ts';
 
 export async function updateUser(id: string, username?: string, password?: string) {
-  const updateSet: {
-    username?: string;
-    password?: string;
-  } = {};
-  if (password) {
-    updateSet.password = await hash(password, argonOptions);
-  }
-  if (username) {
-    updateSet.username = username;
-  }
-  await db.update(users).set(updateSet).where(eq(users.id, id));
+  await db
+    .update(users)
+    .set({
+      username: username || undefined,
+      password: password ? await hash(password, argonOptions) : undefined,
+    })
+    .where(eq(users.id, id));
 }
 
 export async function createUser(username: string, password: string) {

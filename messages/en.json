@@ -79,5 +79,17 @@
   "incorrectRequiredParameters": "Incorrect required parameters: {parameters}",
   "confirm": "Confirm",
   "cancel": "Cancel",
-  "deletePrompt": "Do you want to delete {parameter}?"
+  "deletePrompt": "Do you want to delete {parameter}?",
+  "alreadyExists": "An element with the same values already exists",
+  "incorrectPassword": "Incorrect password",
+  "removePassword": "Remove password",
+  "keepPassword": "Leave empty to keep the current password",
+  "createdAt": "Created at: {date}",
+  "tableOfContents": "Table of Contents",
+  "enableMath": "Enable Math",
+  "editor": "Editor",
+  "preview": "Preview",
+  "addImage": "Add image",
+  "imagePreview": "Image preview",
+  "logout": "Logout"
 }

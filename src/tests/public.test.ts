@@ -1,22 +1,39 @@
 import { describe, expect, it } from 'vitest';
 import { isHttpError, isRedirect } from '@sveltejs/kit';
-import { call, cookieJar, newPost, thrown } from './helpers';
+import { hash } from '@node-rs/argon2';
+import { call, cookieJar, formRequest, newPost, thrown } from './helpers';
 import * as homePage from '../routes/(non-admin)/+page.server';
 import * as postPage from '../routes/(non-admin)/posts/[id=number]/+page.server';
 import * as passwordPage from '../routes/(non-admin)/password/+page.server';
 import { createAuthor } from '#lib/server/db/authors.ts';
 import { createCategory } from '#lib/server/db/categories.ts';
 import { getPost, updateOrCreatePost } from '#lib/server/db/posts.ts';
+import { argonOptions } from '#lib/server/db/utils.ts';
+import { generatePostUnlockToken } from '#lib/server/auth.ts';
 
-async function seedPost(overrides = {}) {
+async function seedPost(overrides: { password?: string } & Record<string, unknown> = {}) {
   const [author] = await createAuthor('nick');
   const [category] = await createCategory('cat', undefined);
+  const password = overrides.password && (await hash(overrides.password, argonOptions));
   return updateOrCreatePost(
-    newPost({ authors: [author], categories: [category], content: 'body', ...overrides }),
+    newPost({
+      authors: [author],
+      categories: [category],
+      content: 'body',
+      ...overrides,
+      password: password ?? null,
+    }),
   );
 }
 
 const url = (path: string) => new URL(`http://localhost${path}`);
+
+/** Loads post `id` with the given unlock cookie. */
+const loadPost = (id: number, unlock?: string) =>
+  call(postPage.load, {
+    params: { id },
+    cookies: cookieJar(unlock ? { 'post-unlock': unlock } : {}).cookies,
+  });
 
 describe('home page', () => {
   it('lists published posts newest first, with only the fields the listing shows', async () => {
@@ -53,12 +70,7 @@ describe('home page', () => {
       categories: [{ id: 1, name: 'cat', color: null }],
       authors: [{ id: 1, nickname: 'nick', firstName: null, lastName: null, image: null }],
     });
-    expect(data).toMatchObject({
-      title: 'Test Title',
-      logo: '/logolight.svg',
-      themes: ['wintry', 'reign', 'mint', 'rose', 'pine', 'cerberus'],
-      modes: ['system', 'dark', 'light'],
-    });
+    expect(data).toMatchObject({ logo: '/logolight.svg' });
   });
 
   it('never exposes passwords, drafts or post content', async () => {
@@ -88,16 +100,13 @@ describe('home page', () => {
 });
 
 describe('post page', () => {
-  it('returns the public fields of the post and increments visits', async () => {
-    await seedPost({ toc: true });
-    const data = await call(postPage.load, { params: { id: '1' }, url: url('/posts/1') });
-    expect(data).toEqual({
+  it('returns the public fields and rendered content of the post and increments visits', async () => {
+    await seedPost({ toc: true, content: '**body**' });
+    expect(await loadPost(1)).toEqual({
       post: {
         id: 1,
         title: 'Title',
-        content: 'body',
-        math: false,
-        toc: true,
+        html: '<p><strong>body</strong></p>',
         tags: [],
         categories: [{ id: 1, name: 'cat', color: null }],
         authors: [
@@ -108,12 +117,10 @@ describe('post page', () => {
     expect((await getPost(1))!.visits).toBe(1);
   });
 
-  it('answers 404 for drafts, even with their password, without counting a visit', async () => {
+  it('answers 404 for drafts, even when unlocked, without counting a visit', async () => {
     await seedPost({ draft: true, password: 'pw' });
-    for (const path of ['/posts/1', '/posts/1?password=pw']) {
-      const error = await thrown(() =>
-        call(postPage.load, { params: { id: '1' }, url: url(path) }),
-      );
+    for (const unlock of [undefined, await generatePostUnlockToken(1)]) {
+      const error = await thrown(() => loadPost(1, unlock));
       expect(isHttpError(error) && error).toMatchObject({
         status: 404,
         body: { message: 'Not found' },
@@ -124,38 +131,29 @@ describe('post page', () => {
 
   it('does not send the password back for an unlocked post', async () => {
     await seedPost({ password: 'pw' });
-    const data = await call(postPage.load, {
-      params: { id: '1' },
-      url: url('/posts/1?password=pw'),
-    });
+    const data = await loadPost(1, await generatePostUnlockToken(1));
     expect(JSON.stringify(data)).not.toContain('"password"');
   });
 
   it('throws 404 for a missing post', async () => {
-    const error = await thrown(() =>
-      call(postPage.load, { params: { id: '9' }, url: url('/posts/9') }),
-    );
+    const error = await thrown(() => loadPost(9));
     expect(isHttpError(error) && error).toMatchObject({
       status: 404,
       body: { message: 'Not found' },
     });
   });
 
-  it('redirects to the password page unless the right password is in the query', async () => {
+  it('redirects to the password page unless the post is unlocked', async () => {
     await seedPost({ password: 'pw' });
-    for (const path of ['/posts/1', '/posts/1?password=bad']) {
-      const error = await thrown(() =>
-        call(postPage.load, { params: { id: '1' }, url: url(path) }),
-      );
+    for (const unlock of [undefined, 'bad', await generatePostUnlockToken(2)]) {
+      const error = await thrown(() => loadPost(1, unlock));
       expect(isRedirect(error) && error).toMatchObject({
         status: 307,
         location: '/password?post=1',
       });
     }
     expect((await getPost(1))!.visits).toBe(0);
-    expect(
-      await call(postPage.load, { params: { id: '1' }, url: url('/posts/1?password=pw') }),
-    ).toMatchObject({ post: { id: 1 } });
+    expect(await loadPost(1, await generatePostUnlockToken(1))).toMatchObject({ post: { id: 1 } });
     expect((await getPost(1))!.visits).toBe(1);
   });
 });
@@ -170,5 +168,58 @@ describe('password page', () => {
   it('redirects home without a post', async () => {
     const error = await thrown(() => call(passwordPage.load, { url: url('/password') }));
     expect(isRedirect(error) && error).toMatchObject({ status: 307, location: '/' });
+  });
+
+  const unlock = (path: string, password: string) => {
+    const jar = cookieJar();
+    // The returned failure, or the thrown redirect
+    const result = Promise.resolve(
+      call(passwordPage.actions.default, {
+        url: url(path),
+        request: formRequest({ password }),
+        cookies: jar.cookies,
+      }),
+    ).catch((redirect: unknown) => redirect);
+    return { jar, result };
+  };
+
+  it('unlocks the post with the right password', async () => {
+    await seedPost({ password: 'pw' });
+    const { jar, result } = unlock('/password?post=1', 'pw');
+    expect(isRedirect(await result) && (await result)).toMatchObject({
+      status: 303,
+      location: '/posts/1',
+    });
+    expect(jar.operations).toEqual([
+      {
+        op: 'set',
+        name: 'post-unlock',
+        value: expect.any(String),
+        options: { path: '/posts/1', maxAge: 86400 },
+      },
+    ]);
+    const token = (jar.operations[0] as { value: string }).value;
+    expect(await loadPost(1, token)).toMatchObject({ post: { id: 1 } });
+  });
+
+  it('rejects a wrong password, a draft, an open or a missing post', async () => {
+    await seedPost({ password: 'pw' });
+    const post = (await getPost(1))!;
+    await updateOrCreatePost({ ...post, id: -1, draft: true });
+    await updateOrCreatePost({ ...post, id: -1, password: null });
+    for (const [path, password] of [
+      ['/password?post=1', 'bad'],
+      ['/password?post=2', 'pw'],
+      ['/password?post=3', ''],
+      ['/password?post=9', 'pw'],
+      ['/password?post=x', 'pw'],
+    ]) {
+      const { jar, result } = unlock(path, password);
+      expect(await result).toMatchObject({
+        status: 401,
+        data: { message: 'Incorrect password' },
+      });
+      expect(jar.operations).toEqual([]);
+    }
   });
 });

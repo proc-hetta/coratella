@@ -1,12 +1,11 @@
 <script lang="ts">
   import { Avatar } from '@skeletonlabs/skeleton-svelte';
-  import { renderMarkdown } from '#lib/marked.ts';
-  import DOMPurify from 'isomorphic-dompurify';
+  import 'katex/dist/katex.min.css';
   import CategoryBadge from '#lib/components/CategoryBadge.svelte';
+  import { m } from '#lib/paraglide/messages.js';
 
   let { data } = $props();
   let post = $derived(data.post);
-  let html = $derived(DOMPurify.sanitize(renderMarkdown(post.content, post.math, post.toc)));
 </script>
 
 <div
@@ -36,13 +35,13 @@
     </div>
     <div class="mt-5">
       <div class="prose prose-neutral prose-invert max-w-none">
-        <!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized by DOMPurify -->
-        {@html html}
+        <!-- eslint-disable-next-line svelte/no-at-html-tags -- rendered and sanitized on the server -->
+        {@html post.html}
       </div>
     </div>
     <footer class="mt-15 border-t">
       <div class="mt-5 flex w-full flex-col gap-2">
-        <h4 class="h4">Authors:</h4>
+        <h4 class="h4">{m.authors()}:</h4>
         {#each post.authors as author (author.id)}
           <div class="flex items-center gap-2 p-1.25">
             <Avatar class="size-12">

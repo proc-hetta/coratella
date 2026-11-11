@@ -1,14 +1,16 @@
 import type { Cookies } from '@sveltejs/kit';
 import type { FullPost } from '#lib/server/db/posts.ts';
 
-export function formRequest(fields: Record<string, string>, url = 'http://localhost/') {
+/** A form POST; array values become repeated fields. */
+export function formRequest(
+  fields: Record<string, string | File | string[]>,
+  url = 'http://localhost/',
+) {
   const body = new FormData();
-  for (const [key, value] of Object.entries(fields)) body.append(key, value);
+  for (const [key, value] of Object.entries(fields)) {
+    for (const item of Array.isArray(value) ? value : [value]) body.append(key, item);
+  }
   return new Request(url, { method: 'POST', body });
-}
-
-export function jsonRequest(method: string, payload: unknown, url = 'http://localhost/') {
-  return new Request(url, { method, body: JSON.stringify(payload) });
 }
 
 export type CookieOperation =

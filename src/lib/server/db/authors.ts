@@ -10,30 +10,16 @@ export async function updateAuthor(
   lastName?: string,
   image?: string,
 ) {
-  const updateSet: {
-    nickname?: string;
-    email?: string;
-    firstName?: string;
-    lastName?: string;
-    image?: string | null;
-  } = {};
-  if (nickname) {
-    updateSet.nickname = nickname;
-  }
-  if (email) {
-    updateSet.email = email;
-  }
-  if (firstName) {
-    updateSet.firstName = firstName;
-  }
-  if (lastName) {
-    updateSet.lastName = lastName;
-  }
-  if (image !== undefined) {
-    updateSet.image = image;
-  }
-
-  await db.update(authors).set(updateSet).where(eq(authors.id, id));
+  await db
+    .update(authors)
+    .set({
+      nickname: nickname || undefined,
+      email: email || undefined,
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
+      image,
+    })
+    .where(eq(authors.id, id));
 }
 
 export async function createAuthor(

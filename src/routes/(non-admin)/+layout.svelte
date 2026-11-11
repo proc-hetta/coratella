@@ -3,38 +3,17 @@
   import { FloatingPanel, Portal } from '@skeletonlabs/skeleton-svelte';
   import { Paintbrush } from '@lucide/svelte';
   import ThemeSwitcher from '#lib/components/ThemeSwitcher.svelte';
-  import { bounceInOut, linear } from 'svelte/easing';
-  import { Tween } from 'svelte/motion';
 
   let { children } = $props();
-  let buttonSize = new Tween(1, {
-    duration: 100,
-    easing: bounceInOut,
-  });
-  let buttonXTranslation = new Tween(-30, {
-    duration: 100,
-    easing: linear,
-  });
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-  class="fixed inset-y-1/2 -left-3 z-0 rounded-full"
-  onmouseenter={() => {
-    buttonSize.target = 2;
-    buttonXTranslation.target = 0;
-  }}
-  onmouseleave={() => {
-    buttonSize.target = 1;
-    buttonXTranslation.target = -30;
-  }}
->
+<div class="group fixed inset-y-1/2 -left-3 z-0 rounded-full">
   <FloatingPanel resizable={false} closeOnEscape={true}>
     <FloatingPanel.Trigger
-      class="btn preset-filled m-3 h-5 origin-center rounded-r-full"
-      style="transform: translate({buttonXTranslation.current}px, 0px) scale({buttonSize.current})"
+      class="btn preset-filled m-3 h-5 origin-center -translate-x-[30px] rounded-r-full transition-transform duration-100 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:translate-x-0 group-hover:scale-200"
     >
-      <Paintbrush size={10} class={[buttonSize.current < 1.3 ? 'opacity-0' : '']}></Paintbrush>
+      <Paintbrush size={10} class="opacity-0 transition-opacity group-hover:opacity-100"
+      ></Paintbrush>
     </FloatingPanel.Trigger>
     <Portal>
       <FloatingPanel.Positioner class="z-50">

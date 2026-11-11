@@ -1,17 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { verify } from '@node-rs/argon2';
 import { eq } from 'drizzle-orm';
-import { call, formRequest } from './helpers';
+import { call, formRequest, newPost } from './helpers';
 import * as authorsPage from '../routes/admin/authors/+page.server';
-import * as authorEndpoint from '../routes/admin/authors/[id=number]/+server';
 import * as usersPage from '../routes/admin/users/+page.server';
-import * as userEndpoint from '../routes/admin/users/[id]/+server';
 import * as profilePage from '../routes/admin/profile/+page.server';
 import { createAuthor, getAuthors } from '#lib/server/db/authors.ts';
 import { createUser, getUsers } from '#lib/server/db/users.ts';
 import { argonOptions } from '#lib/server/db/utils.ts';
 import { db } from '#lib/server/db/index.ts';
 import { users } from '#lib/server/db/schema.ts';
+import { createCategory } from '#lib/server/db/categories.ts';
+import { updateOrCreatePost } from '#lib/server/db/posts.ts';
 
 const author = {
   nickname: 'nick',
@@ -61,11 +61,17 @@ describe('admin authors', () => {
     ).toMatchObject({ status: 400, data: { message: 'Incorrect required parameters: Email' } });
   });
 
-  it('reports duplicate nickname as 500', async () => {
-    await createAuthor('n');
-    expect(
-      await call(authorsPage.actions.create, { request: formRequest({ nickname: 'n' }) }),
-    ).toMatchObject({ status: 500 });
+  it('reports a duplicate nickname or email', async () => {
+    await createAuthor('n', 'n@x.it');
+    const cases: Record<string, string>[] = [{ nickname: 'n' }, { nickname: 'm', email: 'n@x.it' }];
+    for (const fields of cases) {
+      expect(
+        await call(authorsPage.actions.create, { request: formRequest(fields) }),
+      ).toMatchObject({
+        status: 400,
+        data: { message: 'An element with the same values already exists' },
+      });
+    }
   });
 
   it('edits only the provided non-empty fields, image also when empty', async () => {
@@ -83,7 +89,10 @@ describe('admin authors', () => {
     expect(await getAuthors()).toEqual([
       { id: 1, nickname: 'n', email: 'n@x.it', firstName: 'G', lastName: 'L', image: '' },
     ]);
-    await call(authorsPage.actions.edit, { request: formRequest({ id: '1' }) });
+    // Nothing to update is an error
+    await expect(
+      call(authorsPage.actions.edit, { request: formRequest({ id: '1' }) }),
+    ).rejects.toThrow('No values to set');
     expect(await getAuthors()).toEqual([
       { id: 1, nickname: 'n', email: 'n@x.it', firstName: 'G', lastName: 'L', image: '' },
     ]);
@@ -101,8 +110,84 @@ describe('admin authors', () => {
 
   it('deletes an author', async () => {
     await createAuthor('n');
-    expect((await call(authorEndpoint.DELETE, { params: { id: '1' } })).status).toBe(204);
+    const result = await call(authorsPage.actions.delete, { request: formRequest({ id: '1' }) });
+    expect(result).toBeUndefined();
     expect(await getAuthors()).toEqual([]);
+  });
+
+  it('refuses to delete an author of a post', async () => {
+    const [author] = await createAuthor('n');
+    const [category] = await createCategory('c', undefined);
+    await updateOrCreatePost(newPost({ authors: [author], categories: [category] }));
+    expect(
+      await call(authorsPage.actions.delete, { request: formRequest({ id: '1' }) }),
+    ).toMatchObject({ status: 400, data: { message: 'Error while deleting' } });
+    expect(await getAuthors()).toHaveLength(1);
+  });
+});
+
+describe('author images', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  const image = () => new File(['data'], 'a.png', { type: 'image/png' });
+  const create = (imageFile: File) =>
+    call(authorsPage.actions.create, { request: formRequest({ nickname: 'n', imageFile }) });
+
+  it('fails when Torcolo is not configured', async () => {
+    vi.stubEnv('TORCOLO_URL', undefined);
+    vi.stubEnv('TORCOLO_TOKEN', undefined);
+    expect(await create(image())).toMatchObject({
+      status: 401,
+      data: { message: 'Error: Torcolo credentials are either invalid or not provided' },
+    });
+    expect(await getAuthors()).toEqual([]);
+  });
+
+  it('uploads the image to Torcolo and stores its location', async () => {
+    vi.stubEnv('TORCOLO_URL', 'https://torcolo.test');
+    vi.stubEnv('TORCOLO_TOKEN', 'tok');
+    const fetchMock = vi.fn(
+      async () => new Response(null, { status: 201, headers: { Location: '/files/abc' } }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    expect(await create(image())).toBeUndefined();
+    expect((await getAuthors())[0].image).toBe('https://torcolo.test/files/abc');
+    const [target, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(target).toBe('https://torcolo.test/files');
+    expect(init.method).toBe('POST');
+    expect(init.headers).toEqual({ Authorization: 'Bearer tok' });
+    expect((init.body as FormData).get('file')).toBeInstanceOf(File);
+  });
+
+  it('replaces the image on edit', async () => {
+    vi.stubEnv('TORCOLO_URL', 'https://torcolo.test');
+    vi.stubEnv('TORCOLO_TOKEN', 'tok');
+    vi.stubGlobal(
+      'fetch',
+      async () => new Response(null, { status: 201, headers: { Location: '/files/new' } }),
+    );
+    await createAuthor('n', undefined, undefined, undefined, 'old');
+    await call(authorsPage.actions.edit, {
+      request: formRequest({ id: '1', image: 'old', imageFile: image() }),
+    });
+    expect((await getAuthors())[0].image).toBe('https://torcolo.test/files/new');
+  });
+
+  it('fails when Torcolo answers with an error', async () => {
+    vi.stubEnv('TORCOLO_URL', 'https://torcolo.test');
+    vi.stubEnv('TORCOLO_TOKEN', 'tok');
+    vi.stubGlobal('fetch', async () => new Response(null, { status: 500 }));
+    await expect(create(image())).rejects.toThrow('Error while uploading file, status code 500');
+  });
+
+  it('rejects files that are not images', async () => {
+    expect(await create(new File(['x'], 'a.txt', { type: 'text/plain' }))).toMatchObject({
+      status: 400,
+      data: { message: 'Incorrect required parameters: Image' },
+    });
   });
 });
 
@@ -163,8 +248,21 @@ describe('admin users', () => {
 
   it('deletes any user, including the current one', async () => {
     const [u] = await createUser('u', 'p');
-    expect((await call(userEndpoint.DELETE, { params: { id: u.id } })).status).toBe(204);
+    const result = await call(usersPage.actions.delete, { request: formRequest({ id: u.id }) });
+    expect(result).toBeUndefined();
     expect(await getUsers()).toEqual([]);
+  });
+
+  it('reports a duplicate username', async () => {
+    await createUser('u', 'p');
+    expect(
+      await call(usersPage.actions.create, {
+        request: formRequest({ username: 'u', password: 'q' }),
+      }),
+    ).toMatchObject({
+      status: 400,
+      data: { message: 'An element with the same values already exists' },
+    });
   });
 });
 
