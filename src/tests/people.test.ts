@@ -33,12 +33,12 @@ describe('admin authors', () => {
     expect(await call(authorsPage.load, {})).toEqual({ authors: [{ id: 1, ...author }] });
   });
 
-  it('stores empty optional fields as empty strings', async () => {
+  it('stores empty optional fields as null', async () => {
     await call(authorsPage.actions.create, {
       request: formRequest({ nickname: 'n', email: '', firstName: '', lastName: '', image: '' }),
     });
     expect(await getAuthors()).toEqual([
-      { id: 1, nickname: 'n', email: '', firstName: '', lastName: '', image: '' },
+      { id: 1, nickname: 'n', email: null, firstName: null, lastName: null, image: null },
     ]);
   });
 

@@ -33,10 +33,10 @@ export async function createAuthor(
     .insert(authors)
     .values({
       nickname,
-      firstName,
-      lastName,
-      image,
-      email,
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
+      image: image || undefined,
+      email: email || undefined,
     })
     .returning();
 }
