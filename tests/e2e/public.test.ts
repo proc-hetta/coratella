@@ -40,6 +40,9 @@ test('home lists only published posts, newest first', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 3 })).toHaveText(['newer', 'older']);
   await expect(page.getByText('#tag-newer').first()).toBeAttached();
   await expect(page.getByText('cat-newer').first()).toBeAttached();
+  // Author chips show the nickname only
+  await expect(page.getByText('author-newer').first()).toBeAttached();
+  await expect(page.getByText('Lovelace')).toHaveCount(0);
 });
 
 test('home page data never contains passwords, drafts or content', async ({ page }) => {

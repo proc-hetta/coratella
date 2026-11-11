@@ -60,10 +60,6 @@
                           >{author.firstName?.[0]} {author.lastName?.[0]}</Avatar.Fallback
                         >
                       </Avatar>
-                      <p>
-                        name="{author.firstName}
-                        {author.lastName}"
-                      </p>
                       <div class="max-w-30 overflow-x-scroll md:max-w-fit md:overflow-x-hidden">
                         {author.nickname}
                       </div>
