@@ -5,26 +5,28 @@ export const themes = ['wintry', 'reign', 'mint', 'rose', 'pine', 'cerberus'];
 export const defaultMode = 'system';
 export const modes = ['system', 'dark', 'light'];
 
-type Preference = 'theme' | 'mode';
+/** One year: preferences survive browser restarts. */
+const preferenceMaxAge = 60 * 60 * 24 * 365;
 
-/** Reads a preference from its cookie, then from the `data-*` attribute on `<html>`. */
-function readPreference(name: Preference, fallback: string) {
-  if (!browser) return fallback;
-  const fromCookie = document.cookie
-    .split('; ')
-    .find((v) => v.includes(`${name}=`))
-    ?.split('=')[1];
-  return fromCookie ?? document.documentElement.getAttribute(`data-${name}`) ?? fallback;
+function oneOf(values: string[], value: string | null | undefined, fallback: string) {
+  return value && values.includes(value) ? value : fallback;
 }
 
-/** Applies a preference to `<html>` and persists it in a cookie read by the server hooks. */
-function writePreference(name: Preference, value: string) {
+export const themeOrDefault = (value?: string | null) => oneOf(themes, value, defaultTheme);
+export const modeOrDefault = (value?: string | null) => oneOf(modes, value, defaultMode);
+
+// The server renders the allow-listed preferences on `<html>`, so the attributes are the source of truth.
+const rootDataset = () => (browser ? document.documentElement.dataset : undefined);
+
+export const getTheme = () => themeOrDefault(rootDataset()?.theme);
+export const getMode = () => modeOrDefault(rootDataset()?.mode);
+
+/** Applies a preference to `<html>` and persists it in the cookie read by the server hooks. */
+function setPreference(name: 'theme' | 'mode', value: string) {
   if (!browser) return;
-  document.documentElement.setAttribute(`data-${name}`, value);
-  document.cookie = `${name}=${value}; path=/`;
+  document.documentElement.dataset[name] = value;
+  document.cookie = `${name}=${value}; path=/; max-age=${preferenceMaxAge}; SameSite=Lax`;
 }
 
-export const getTheme = () => readPreference('theme', defaultTheme);
-export const setTheme = (theme: string) => writePreference('theme', theme);
-export const getMode = () => readPreference('mode', defaultMode);
-export const setMode = (mode: string) => writePreference('mode', mode);
+export const setTheme = (theme: string) => setPreference('theme', theme);
+export const setMode = (mode: string) => setPreference('mode', mode);

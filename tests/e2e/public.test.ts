@@ -14,6 +14,23 @@ test('fills html placeholders from cookies', async ({ page }) => {
   expect(await response.text()).toContain('<html data-theme="rose" data-mode="dark" lang="it">');
 });
 
+test('tampered theme and mode cookies fall back to the defaults', async ({ page }) => {
+  const payload = encodeURIComponent('x"><script>window.__injected=1</script><x y="');
+  const response = await page.request.get('/', {
+    headers: { cookie: `theme=${payload}; mode=${payload}` },
+  });
+  const html = await response.text();
+  expect(html).toContain('<html data-theme="wintry" data-mode="system" lang="en">');
+  expect(html).not.toContain('__injected');
+
+  await page.context().addCookies([
+    { name: 'theme', value: payload, url: 'http://localhost:4173' },
+    { name: 'mode', value: payload, url: 'http://localhost:4173' },
+  ]);
+  await page.goto('/admin/tags');
+  expect(await page.evaluate(() => (window as { __injected?: number }).__injected)).toBeUndefined();
+});
+
 test('home lists only published posts, newest first', async ({ page }) => {
   await seedPost({ title: 'older', content: 'a', ctime: '2024-01-01T00:00:00Z' });
   await seedPost({ title: 'newer', content: 'b', ctime: '2024-06-01T00:00:00Z' });

@@ -228,6 +228,17 @@ test('theme switcher updates attributes and cookies', async ({ page, context }) 
   await page.getByRole('button', { name: 'dark' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'rose');
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
-  const cookies = Object.fromEntries((await context.cookies()).map((c) => [c.name, c.value]));
-  expect(cookies).toMatchObject({ theme: 'rose', mode: 'dark' });
+  const cookies = Object.fromEntries((await context.cookies()).map((c) => [c.name, c]));
+  const inAYear = Date.now() / 1000 + 360 * 24 * 60 * 60;
+  for (const [name, value] of [
+    ['theme', 'rose'],
+    ['mode', 'dark'],
+  ]) {
+    expect(cookies[name]).toMatchObject({ value, sameSite: 'Lax', path: '/' });
+    expect(cookies[name].expires).toBeGreaterThan(inAYear);
+  }
+
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'rose');
+  await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
 });

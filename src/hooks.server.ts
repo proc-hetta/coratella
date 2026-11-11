@@ -1,9 +1,8 @@
 import { redirect } from '@sveltejs/kit';
-import { PUBLIC_TITLE } from '$app/env/public';
 import * as auth from '#lib/server/auth.js';
 import { sequence, type Handle } from '@sveltejs/kit/hooks';
 import { paraglideMiddleware } from '#lib/paraglide/server.js';
-import { defaultMode, defaultTheme } from '#lib/themes.ts';
+import { modeOrDefault, themeOrDefault } from '#lib/themes.ts';
 
 const handleParaglide: Handle = ({ event, resolve }) =>
   paraglideMiddleware(event.request, ({ request, locale }) =>
@@ -39,30 +38,13 @@ const handleAuth: Handle = async ({ event, resolve }) => {
   }
 };
 
-const handleTitle: Handle = ({ event, resolve }) => {
-  return resolve(event, {
-    transformPageChunk: ({ html }) => html.replace('%title%', PUBLIC_TITLE ?? 'Coratella'),
-  });
-};
-
 const handleTheme: Handle = ({ event, resolve }) => {
   return resolve(event, {
     transformPageChunk: ({ html }) =>
-      html.replace('%theme%', event.cookies.get('theme') ?? defaultTheme),
+      html
+        .replace('%theme%', themeOrDefault(event.cookies.get('theme')))
+        .replace('%mode%', modeOrDefault(event.cookies.get('mode'))),
   });
 };
 
-const handleMode: Handle = ({ event, resolve }) => {
-  return resolve(event, {
-    transformPageChunk: ({ html }) =>
-      html.replace('%mode%', event.cookies.get('mode') ?? defaultMode),
-  });
-};
-
-export const handle: Handle = sequence(
-  handleParaglide,
-  handleTitle,
-  handleAuth,
-  handleTheme,
-  handleMode,
-);
+export const handle: Handle = sequence(handleParaglide, handleAuth, handleTheme);
