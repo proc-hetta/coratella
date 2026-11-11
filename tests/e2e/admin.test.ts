@@ -132,6 +132,22 @@ test('authors: create, validate email, delete', async ({ page }) => {
   await expect(rows).toHaveCount(0);
 });
 
+// Without Torcolo credentials, a received image is reported as such
+test('authors: create with an image sends the file', async ({ page }) => {
+  await login(page);
+  await page.goto('/admin/authors');
+  await page.locator('h4', { hasText: 'Authors' }).locator('..').getByRole('button').click();
+  await dialog(page).locator('input[name=nickname]').fill('grace');
+  await dialog(page).locator('input[name=email]').fill('grace@example.com');
+  await dialog(page)
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'grace.png', mimeType: 'image/png', buffer: Buffer.from('png') });
+  await expect(dialog(page).getByRole('img')).toBeVisible();
+  await confirm(page);
+  await toast(page, 'Error: Torcolo credentials are either invalid or not provided');
+  await expect(page.locator('tbody tr')).toHaveCount(0);
+});
+
 test('users: create and delete, own user cannot be deleted', async ({ page }) => {
   await login(page);
   await page.goto('/admin/users');
