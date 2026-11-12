@@ -45,8 +45,12 @@ function flattenRelations<T extends PostWithRelations>(post: T) {
   };
 }
 
+/** All posts, newest first. */
 export async function getPosts() {
-  const rows = await db.query.posts.findMany({ with: withRelations });
+  const rows = await db.query.posts.findMany({
+    orderBy: [desc(posts.ctime), asc(posts.id)],
+    with: withRelations,
+  });
   return rows.map(flattenRelations);
 }
 

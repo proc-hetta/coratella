@@ -5,7 +5,7 @@
   import { resolve } from '$app/paths';
   import { PUBLIC_TITLE } from '$app/env/public';
   import { m } from '#lib/paraglide/messages.js';
-  import { getLocale } from '#lib/paraglide/runtime.js';
+  import { format } from 'date-fns';
 
   let { data } = $props();
   let posts = $derived(data.posts);
@@ -43,7 +43,7 @@
                     {/each}
                   </div>
                   <div>
-                    {m.createdAt({ date: post.ctime.toLocaleDateString(getLocale()) })}
+                    {m.createdAt({ date: format(post.ctime, 'dd/MM/yyyy') })}
                   </div>
                   <div class="items-top my-2 hidden justify-start gap-2 divide-x md:flex">
                     {#each post.tags as tag (tag.id)}
