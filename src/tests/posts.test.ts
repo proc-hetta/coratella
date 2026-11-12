@@ -100,6 +100,18 @@ describe('posts data layer', () => {
     expect(await getPosts()).toHaveLength(1);
   });
 
+  it('lists posts newest first', async () => {
+    const { author, category } = await relations();
+    await updateOrCreatePost(
+      newPost({ title: 'older', authors: [author], categories: [category] }),
+    );
+    await updateOrCreatePost({ ...(await getPost(1))!, ctime: new Date('2024-01-01T00:00:00Z') });
+    await updateOrCreatePost(
+      newPost({ title: 'newer', authors: [author], categories: [category] }),
+    );
+    expect((await getPosts()).map((p) => p.title)).toEqual(['newer', 'older']);
+  });
+
   it('increments and sums visits', async () => {
     const { author, category } = await relations();
     await updateOrCreatePost(newPost({ visits: 3, authors: [author], categories: [category] }));

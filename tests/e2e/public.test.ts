@@ -31,6 +31,12 @@ test('tampered theme and mode cookies fall back to the defaults', async ({ page 
   expect(await page.evaluate(() => (window as { __injected?: number }).__injected)).toBeUndefined();
 });
 
+test('home shows post dates as DD/MM/YYYY', async ({ page }) => {
+  await seedPost({ title: 'dated', content: 'a', ctime: '2024-06-09T12:00:00Z' });
+  await page.goto('/');
+  await expect(page.getByText('Created at: 09/06/2024')).toBeVisible();
+});
+
 test('home lists only published posts, newest first', async ({ page }) => {
   await seedPost({ title: 'older', content: 'a', ctime: '2024-01-01T00:00:00Z' });
   await seedPost({ title: 'newer', content: 'b', ctime: '2024-06-01T00:00:00Z' });
