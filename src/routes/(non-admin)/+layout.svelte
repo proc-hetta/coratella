@@ -17,7 +17,7 @@
     </FloatingPanel.Trigger>
     <Portal>
       <FloatingPanel.Positioner class="z-50">
-        <FloatingPanel.Content>
+        <FloatingPanel.Content class="h-auto!">
           <FloatingPanel.DragTrigger>
             <FloatingPanel.Header>
               <FloatingPanel.Title>

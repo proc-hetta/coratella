@@ -20,7 +20,7 @@
   {/each}
 {/snippet}
 
-<div class="z-50 grid grid-rows-2 gap-8">
+<div class="z-50 flex flex-col gap-8">
   <div class="bg-surface-100-900 grid grid-cols-3 gap-2">
     {@render choices(modes, selectedMode, (mode) => {
       selectedMode = mode;
