@@ -242,8 +242,8 @@ test('posts: delete from the list', async ({ page }) => {
 test('theme switcher updates attributes and cookies', async ({ page, context }) => {
   await login(page);
   await page.locator('header').getByRole('button').first().click();
-  await page.getByRole('button', { name: 'rose' }).click();
-  await page.getByRole('button', { name: 'dark' }).click();
+  await page.getByRole('button', { name: 'rose', exact: true }).click();
+  await page.getByRole('button', { name: 'dark', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'rose');
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
   const cookies = Object.fromEntries((await context.cookies()).map((c) => [c.name, c]));

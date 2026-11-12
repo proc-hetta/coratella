@@ -14,6 +14,11 @@ test('fills html placeholders from cookies', async ({ page }) => {
   expect(await response.text()).toContain('<html data-theme="rose" data-mode="dark" lang="it">');
 });
 
+test('every Skeleton theme can be selected', async ({ page }) => {
+  const response = await page.request.get('/', { headers: { cookie: 'theme=dracula' } });
+  expect(await response.text()).toContain('<html data-theme="dracula"');
+});
+
 test('tampered theme and mode cookies fall back to the defaults', async ({ page }) => {
   const payload = encodeURIComponent('x"><script>window.__injected=1</script><x y="');
   const response = await page.request.get('/', {
